@@ -15,13 +15,14 @@ const getPhotosetsUrl = `https://www.flickr.com/services/rest/?method=flickr.pho
 const imgUrlPrototype = (server, id, secret, size) => `https://live.staticflickr.com/${server}/${id}_${secret}_${size}.jpg`
 
 
-const widget = await createWidget()
-if (!config.runsInWidget) 
-{
-	await widget.presentMedium()
-}
-Script.setWidget(widget)
-Script.complete()
+// Uncomment this if you want to run the widget locally
+// const widget = await createWidget()
+// if (!config.runsInWidget) 
+// {
+// 	await widget.presentMedium()
+// }
+// Script.setWidget(widget)
+// Script.complete()
 
 
 /*
@@ -30,7 +31,7 @@ Script.complete()
  * the image title in the slightly darker part of the grandient in the lower 
  * left corner of the widget.
  */
-async function createWidget(items)
+async function createWidget(params)
 {
 	let widget = new ListWidget()
 	let selection = await getRandomPic()
