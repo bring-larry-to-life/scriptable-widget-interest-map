@@ -1,7 +1,7 @@
 // Refresh interval in hours
 const refreshInterval = 6
 
-const getMapUrlByCoordinates = (apiKey, lat, lng, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+const getMapUrlByCoordinates = (apiKey, lat, lng, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${apiKey}&markers=color:blue|${lat},${lng}`;
 
 // Build Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
