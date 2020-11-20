@@ -9,6 +9,8 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14
 		const coords = markers.map(marker => { 
 			return `${marker.lat},${marker.lng}`;
 		});
+
+		console.log()
 		
 		return `${googleMapsBaseUri}?size=${size}&key=${apiKey}&markers=color:blue|${center}&markers=color:red|${coords.join('|')}`
 	}
@@ -126,7 +128,7 @@ async function getNearbyWikiArticles(lat, lng) {
 			"title": article.title,
 			"lng": article.lon,
 			"lat": article.lat
-		})));
+		}));
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch(e) {
