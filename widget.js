@@ -6,7 +6,8 @@ const getMapUrlByCoordinates = (apiKey, lat, lng, zoom = '14', size='400x400') =
 // Build Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
-const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`
+const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?${pageId}`;
+const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`;
 
 // Get user's current location. Returns { latitude, longitude }
 const getCurrentLocation = async () => {
@@ -103,20 +104,21 @@ async function getNearbyWikiArticles(lat, lng) {
 		} else {
 			throw new Error("Could not read data from wikipedia");
 		}
-		console.log(articles);
 
 		const response = [];
-// 		for (int i=0; i<articles; i++) {
-// 			response.push({
-// 				"url":"https://en.wikipedia.org/?" + articles[i].pageid,
-// 				"primary":"",
-// 				"distance":articles[i].dist,
-// 				"ns":0,
-// 				"title":"Cape Cod",
-// 				"lng":-70.2,
-// 				"lat":41.68
-// 			})
-// 		}
+		for (int i=0; i<articles; i++) {
+			response.push({
+				"url": getWikiUrlByPageId(articles[i].pageid),
+				"primary": articles[i].primary,
+				"distance": articles[i].dist,
+				"ns": articles[i].ns,
+				"title": articles[i].title,
+				"lng": articles[i].lon,
+				"lat": articles[i].lat
+			})
+		}
+		console.log('Converted Wiki JSON: ' + response);
+		return response;
 	} catch(e) {
 		console.error(e)
 		return null;
