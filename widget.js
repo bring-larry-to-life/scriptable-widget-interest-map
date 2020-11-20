@@ -1,10 +1,22 @@
 // Refresh interval in hours
 const refreshInterval = 6
 
+const getMapUrlByCoordinates = (apiKey, lat, lng, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+
 // Build Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
 const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`
+
+// Get user's current location. Returns { latitude, longitude }
+const getCurrentLocation = async () => {
+	return Location.current().then((res) => { 
+		return {
+			'latitude': res.latitude, 
+			'longitude': res.longitude 
+		};
+	}, err => console.log(`Could not get current location: ${err}`));
+};
 
 // Uncomment this if you want to run the widget locally
 // const widget = await createWidget()
@@ -25,7 +37,9 @@ async function createWidget(params)
 {
 	const { apiKey } = params;
 	let widget = new ListWidget()
-	let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
+	let currLocation = await getCurrentLocation();
+	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
+	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
@@ -79,6 +93,23 @@ async function getNearbyWikiArticles(lat, lng) {
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
 		console.log(wikiJSON);
+	} catch(e) {
+		console.error(e)
+		return null;
+	}
+}
+
+ /* 
+  * Returns object containing static Google Maps image response and widget title
+  */
+async function getMapsPicByCurrentLocations(apiKey, latitude, longitude) {
+	try {
+		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude);
+		console.log('Request URI');
+		console.log(uri);
+		const mapPicRequest = new Request(encodeURI(uri));
+		const mapPic = await mapPicRequest.loadImage();
+		return { image: mapPic, title: 'Current Location' };
 	} catch(e) {
 		console.error(e)
 		return null;
