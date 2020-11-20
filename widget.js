@@ -10,6 +10,8 @@ const getPhotosetsUrl = (apiKey, userId) => `https://www.flickr.com/services/res
 // URL prototype to use for loading the image
 const imgUrlPrototype = (server, id, secret, size) => `https://live.staticflickr.com/${server}/${id}_${secret}_${size}.jpg`
 
+const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+
 
 // Uncomment this if you want to run the widget locally
 // const widget = await createWidget()
@@ -31,7 +33,8 @@ async function createWidget(params)
 {
 	const {apiKey, userId} = params;
 	let widget = new ListWidget()
-	let selection = await getRandomPic(apiKey, userId)
+	// let selection = await getRandomPic(apiKey, userId)
+	let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
@@ -90,6 +93,20 @@ async function getRandomPic(apiKey, userId)
 		console.error(e)
 		return null
 	}
+}
+
+async function getMapsPicByCity(apiKey, city) {
+	try {
+		const mapPicRequest = new Request(getMapUrlByCity(apiKey, city));
+		const mapPic = await mapPicRequest.loadImage();
+		return { image: mapPic, title: city };
+	} catch(e) {
+		console.error(e)
+		return null;
+	}
+	
+
+
 }
 
 /*
