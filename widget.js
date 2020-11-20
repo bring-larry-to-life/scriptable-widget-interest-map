@@ -101,11 +101,11 @@ async function getMapsPicByCity(apiKey, city) {
 	try {
 		console.log('url');
 		console.log(getMapUrlByCity(apiKey, city));
-		const mapPicRequest = new Request(getMapUrlByCity(apiKey, city));
+		const mapPicRequest = new Request(encodeURI(getMapUrlByCity(apiKey, city)));
 		console.log('mapPicRequest');
 		console.log(mapPicRequest);
-		// const mapPic = await mapPicRequest.loadImage();
-		return { image: mapPicRequest, title: city };
+		const mapPic = await mapPicRequest.loadImage();
+		return { image: mapPic, title: city };
 	} catch(e) {
 		console.error(e)
 		return null;
