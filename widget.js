@@ -144,7 +144,7 @@ async function getNearbyWikiArticles(lat, lng) {
 			"lng": article.coordinates[0].lon,
 			"lat": article.coordinates[0].lat,
             		"thumbnail": article.thumbnail
-		})));
+		}));
 
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
