@@ -34,6 +34,8 @@ const getCurrentLocation = async () => {
 const createTable = (items) => {
 	const table = new UITable();
 	items.forEach(item => {
+		console.log('ITEM');
+		console.log(item);
 		const row = new UITableRow();
 		const imageUrl = item.thumbnail.source;
 		const title = item.title;
