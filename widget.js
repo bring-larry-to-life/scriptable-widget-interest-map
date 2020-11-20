@@ -18,7 +18,7 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14
 // Build Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
-const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?${pageId}`;
+const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?curid=${pageId}`;
 const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates|pageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`
 
 // Get user's current location. Returns { latitude, longitude }
