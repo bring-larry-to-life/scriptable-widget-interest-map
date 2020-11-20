@@ -23,6 +23,7 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
 
 // Get user's current location. Returns { latitude, longitude }
 const getCurrentLocation = async () => {
+        Location.setAccuracyToTenMeters();
 	return Location.current().then((res) => { 
 		return {
 			'latitude': res.latitude, 
