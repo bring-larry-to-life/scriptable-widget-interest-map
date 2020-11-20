@@ -1,10 +1,22 @@
 // Refresh interval in hours
 const refreshInterval = 6
 
-const getMapUrlByCoordinates = (apiKey, lat, lng, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&key=${apiKey}&markers=color:blue|${lat},${lng}`;
+const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
+
+const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14', size='400x400') => {
+	const center = `${userLat},${userLng}`;
+	if (markers.length >= 1) {
+		const coords = markers.map(marker => { 
+			return `${marker.lat},${marker.lng}`;
+		});
+		
+		return `${googleMapsBaseUri}?size=${size}&key=${apiKey}&markers=color:blue|${center}&markers=color:red|${coords.join('|')}`
+	}
+	return `${googleMapsBaseUri}?center=${center}&zoom=${zoom}&size=${size}&key=${apiKey}&markers=color:blue|${center}`;
+}
 
 // Build Google Maps API URI given city input
-const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
 const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?${pageId}`;
 const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`;
@@ -39,12 +51,13 @@ async function createWidget(params)
 	const { apiKey } = params;
 	let widget = new ListWidget()
 	let currLocation = await getCurrentLocation();
+	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
 	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
-	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude);
+	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
-	await getNearbyWikiArticles(41.68365535753726,-70.19823287890266);
+	
 	
 	let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
@@ -125,9 +138,9 @@ async function getNearbyWikiArticles(lat, lng) {
  /* 
   * Returns object containing static Google Maps image response and widget title
   */
-async function getMapsPicByCurrentLocations(apiKey, latitude, longitude) {
+async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
 	try {
-		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude);
+		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
 		console.log('Request URI');
 		console.log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
