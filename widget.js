@@ -4,6 +4,8 @@ const refreshInterval = 6
 // Build Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `https://maps.googleapis.com/maps/api/staticmap?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
+const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`
+
 // Uncomment this if you want to run the widget locally
 // const widget = await createWidget()
 // if (!config.runsInWidget) 
@@ -26,6 +28,8 @@ async function createWidget(params)
 	let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
+	
+	await getNearbyWikiArticles(41.68365535753726,-70.19823287890266);
 	
 	let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
@@ -56,6 +60,25 @@ async function getMapsPicByCity(apiKey, city) {
 		const mapPicRequest = new Request(encodeURI(getMapUrlByCity(apiKey, city)));
 		const mapPic = await mapPicRequest.loadImage();
 		return { image: mapPic, title: city };
+	} catch(e) {
+		console.error(e)
+		return null;
+	}
+}
+
+/*
+ * Calls wikipedia for nearby articles and modifies the object for ease of use.
+ * 
+ * Example output:
+ * {}
+ */
+async function getNearbyWikiArticles(lat, lng) {
+	try {
+		const uri = getWikiUrlByCoords(lat, lng);
+		console.log('Request URI: ' + uri);
+		const request = new Request(encodeURI(uri));
+		const wikiJSON = await request.loadJSON();
+		console.log(wikiJSON);
 	} catch(e) {
 		console.error(e)
 		return null;
