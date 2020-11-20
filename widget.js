@@ -9,8 +9,6 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14
 		const coords = markers.map(marker => { 
 			return `${marker.lat},${marker.lng}`;
 		});
-
-		console.log()
 		
 		return `${googleMapsBaseUri}?size=${size}&key=${apiKey}&markers=color:blue|${center}&markers=color:red|${coords.join('|')}`
 	}
@@ -39,7 +37,7 @@ const createTable = (items) => {
 		const row = new UITableRow();
 		const imageUrl = item.thumbnail.source;
 		const title = item.title;
-		const imageCell = row.addImageAtUrl(imageUrl);
+		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
 		imageCell.widthWeight = 20;
 		titleCell.widthWeight = 80;
