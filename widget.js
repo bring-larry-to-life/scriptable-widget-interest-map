@@ -33,6 +33,25 @@ const getCurrentLocation = async () => {
 	}, err => console.log(`Could not get current location: ${err}`));
 };
 
+const createTable = (items) => {
+	const table = new UITable();
+	items.forEach(item => {
+		const row = new UITableRow();
+		const imageUrl = item.thumbnail.source;
+		const title = item.title;
+		const imageCell = row.addImageAtUrl(imageUrl);
+		const titleCell = row.addText(title);
+		imageCell.widthWeight = 20;
+		titleCell.widthWeight = 80;
+		row.height = 60;
+		row.cellSpacing = 10;
+		row.onSelect = (index) => Safari.open(items[index].url);
+		row.dismissOnSelect = false;
+		table.addRow(row);
+	});
+	return table;
+}
+
 // Uncomment this if you want to run the widget locally
 // const widget = await createWidget()
 // if (!config.runsInWidget) 
@@ -43,7 +62,11 @@ const getCurrentLocation = async () => {
 // Script.complete()
 
 async function clickWidget(params) {
-	console.log(params);
+	const { apiKey } = params;
+	let currLocation = await getCurrentLocation();
+	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
+	const table = createTable(wikiArticles);
+	await QuickLook.present(table);
 }
 
 /*
@@ -62,8 +85,6 @@ async function createWidget(params)
 	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
-	
-	
 	
 	let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
@@ -143,7 +164,7 @@ async function getNearbyWikiArticles(lat, lng) {
 			"title": article.title,
 			"lng": article.coordinates[0].lon,
 			"lat": article.coordinates[0].lat,
-            		"thumbnail": article.thumbnail
+            "thumbnail": article.thumbnail
 		}));
 
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
