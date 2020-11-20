@@ -1,0 +1,1 @@
+# scriptable-widget-interest-map
