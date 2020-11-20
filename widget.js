@@ -64,12 +64,17 @@ async function createWidget(params)
  */
 async function getRandomPic(apiKey, userId)
 {
+	console.log("apiKey: " + apiKey);
+	console.log("userId: " + userId);
 	try
 	{
-		const photosetId = await getPhotosetId(apiKey, userId)
+		const photosetId = await getPhotosetId(apiKey, userId);
+		console.log("photosetId: " + photosetId);
 		if(photosetId)
 		{
-			let data = await new Request(getPhotosUrl(apiKey, userId, photosetId)).loadJSON()
+			const photosUrl = await getPhotosUrl(apiKey, userId, photosetId);
+			console.log("photosUrl: " + photosUrl);
+			let data = await new Request(photosUrl).loadJSON()
 			let photos = data.photoset.photo
 			let num = Math.floor((Math.random() * (photos.length - 1)));
 			let pic = photos[num]
@@ -104,6 +109,7 @@ async function getPhotosetId(apiKey, userId)
 	try
 	{
 		let data = await new Request(getPhotosetsUrl(apiKey, userId)).loadJSON()
+		console.log("data: " + data);
 		let photosets = data.photosets.photoset
 		let num = Math.floor((Math.random() * (photosets.length - 1)));
 		let set = photosets[num]
