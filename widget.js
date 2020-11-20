@@ -96,7 +96,7 @@ async function getNearbyWikiArticles(lat, lng) {
 		console.log('Request URI: ' + uri);
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
-		console.log('Wiki JSON: ' + wikiJSON);
+		console.log('Wiki JSON: ' + JSON.stringify(wikiJSON));
 
 		let articles;
 		if (wikiJSON && wikiJSON.query && wikiJSON.query.geosearch) {
@@ -105,19 +105,16 @@ async function getNearbyWikiArticles(lat, lng) {
 			throw new Error("Could not read data from wikipedia");
 		}
 
-		const response = [];
-		for (let i=0; i<articles; i++) {
-			response.push({
-				"url": getWikiUrlByPageId(articles[i].pageid),
-				"primary": articles[i].primary,
-				"distance": articles[i].dist,
-				"ns": articles[i].ns,
-				"title": articles[i].title,
-				"lng": articles[i].lon,
-				"lat": articles[i].lat
-			});
-		}
-		console.log('Converted Wiki JSON: ' + response);
+		var response = articles.map(article => ({
+			"url": getWikiUrlByPageId(article.pageid),
+			"primary": article.primary,
+			"distance": article.dist,
+			"ns": article.ns,
+			"title": article.title,
+			"lng": article.lon,
+			"lat": article.lat
+		})));
+		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch(e) {
 		console.error(e)
