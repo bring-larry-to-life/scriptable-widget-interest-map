@@ -69,8 +69,8 @@ async function getMapsPicByCity(apiKey, city) {
 /*
  * Calls wikipedia for nearby articles and modifies the object for ease of use.
  * 
- * Example output:
- * {}
+ * Example output from Wikipedia:
+ * {"query":{"geosearch":[{"pageid":38743,"primary":"","dist":432.1,"ns":0,"title":"Cape Cod","lon":-70.2,"lat":41.68},{"pageid":4866309,"primary":"","dist":721.7,"ns":0,"title":"Cape Cod Coliseum","lon":-70.19622222222223,"lat":41.68996944444444},{"pageid":3051164,"primary":"","dist":738,"ns":0,"title":"Dennis-Yarmouth Regional High School","lon":-70.19363611111112,"lat":41.677974999999996},{"pageid":39230827,"primary":"","dist":779.3,"ns":0,"title":"Red Wilson Field","lon":-70.194,"lat":41.6774},{"pageid":2013195,"primary":"","dist":1120.2,"ns":0,"title":"WKPE-FM","lon":-70.189,"lat":41.691},{"pageid":58211602,"primary":"","dist":1549.7,"ns":0,"title":"Long Pond (West Yarmouth, Massachusetts)","lon":-70.1971508,"lat":41.669742},{"pageid":39494986,"primary":"","dist":1691.5,"ns":0,"title":"Yarmouth-Barnstable Regional Transfer Station","lon":-70.21765833333333,"lat":41.68823333333333},{"pageid":116666,"primary":"","dist":1769.8,"ns":0,"title":"South Yarmouth, Massachusetts","lon":-70.19972222222222,"lat":41.66777777777777},{"pageid":21797930,"primary":"","dist":1841.8,"ns":0,"title":"Dennis Beaches","lon":-70.17791666666668,"lat":41.67701388888889},{"pageid":18446199,"primary":"","dist":2105.4,"ns":0,"title":"Thomas Bray Farm","lon":-70.20805555555556,"lat":41.70111111111111}]},"batchcomplete":""}
  */
 async function getNearbyWikiArticles(lat, lng) {
 	try {
