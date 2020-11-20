@@ -3,14 +3,19 @@ const refreshInterval = 6
 
 const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
 
+const nextChar = (c) => {
+    return String.fromCharCode(c.charCodeAt(0) + 1);
+}
+
 const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14', size='800x800') => {
 	const center = `${userLat},${userLng}`;
 	if (markers.length >= 1) {
-		const coords = markers.map(marker => { 
-			return `${marker.lat},${marker.lng}`;
+		let label = '@';
+		const coords = markers.map(marker => {
+			label = nextChar(label);
+			return `markers=color:red|label:${label}|${marker.lat},${marker.lng}`;
 		});
-		
-		return `${googleMapsBaseUri}?size=${size}&key=${apiKey}&markers=color:blue|${center}&markers=color:red|${coords.join('|')}`
+		return `${googleMapsBaseUri}?size=${size}&key=${apiKey}&${coords.join('&')}`;
 	}
 	return `${googleMapsBaseUri}?center=${center}&zoom=${zoom}&size=${size}&key=${apiKey}&markers=color:blue|${center}`;
 }
