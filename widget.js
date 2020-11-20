@@ -35,6 +35,8 @@ async function createWidget(params)
 	let widget = new ListWidget()
 	// let selection = await getRandomPic(apiKey, userId)
 	let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
+	console.log('selection');
+	console.log(selection);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
@@ -97,9 +99,13 @@ async function getRandomPic(apiKey, userId)
 
 async function getMapsPicByCity(apiKey, city) {
 	try {
+		console.log('url');
+		console.log(getMapUrlByCity(apiKey, city));
 		const mapPicRequest = new Request(getMapUrlByCity(apiKey, city));
-		const mapPic = await mapPicRequest.loadImage();
-		return { image: mapPic, title: city };
+		console.log('mapPicRequest');
+		console.log(mapPicRequest);
+		// const mapPic = await mapPicRequest.loadImage();
+		return { image: mapPicRequest, title: city };
 	} catch(e) {
 		console.error(e)
 		return null;
