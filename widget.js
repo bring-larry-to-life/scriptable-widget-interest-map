@@ -106,7 +106,7 @@ async function getNearbyWikiArticles(lat, lng) {
 		}
 
 		const response = [];
-		for (int i=0; i<articles; i++) {
+		for (let i=0; i<articles; i++) {
 			response.push({
 				"url": getWikiUrlByPageId(articles[i].pageid),
 				"primary": articles[i].primary,
@@ -115,7 +115,7 @@ async function getNearbyWikiArticles(lat, lng) {
 				"title": articles[i].title,
 				"lng": articles[i].lon,
 				"lat": articles[i].lat
-			})
+			});
 		}
 		console.log('Converted Wiki JSON: ' + response);
 		return response;
