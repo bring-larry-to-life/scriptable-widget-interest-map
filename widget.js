@@ -117,3 +117,7 @@ async function getPhotosetId(apiKey, userId)
 		return null
 	}
 }
+
+module.exports = {
+    createWidget
+}
