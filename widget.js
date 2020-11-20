@@ -37,7 +37,7 @@ const createTable = (items) => {
 		console.log('ITEM');
 		console.log(item);
 		const row = new UITableRow();
-		const imageUrl = item.thumbnail.source;
+		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
