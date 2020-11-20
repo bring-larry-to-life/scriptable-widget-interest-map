@@ -21,7 +21,7 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14
 const getMapUrlByCity = (apiKey, city, zoom = '14', size='400x400') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
 const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?${pageId}`;
-const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gscoord=${lat}|${lng}&format=json`;
+const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates%7Cpageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`
 
 // Get user's current location. Returns { latitude, longitude }
 const getCurrentLocation = async () => {
@@ -132,21 +132,20 @@ async function getNearbyWikiArticles(lat, lng) {
 		console.log('Wiki JSON: ' + JSON.stringify(wikiJSON));
 
 		let articles;
-		if (wikiJSON && wikiJSON.query && wikiJSON.query.geosearch) {
-			articles = wikiJSON.query.geosearch;
+		if (wikiJSON && wikiJSON.query && wikiJSON.query.pages) {
+			articles = wikiJSON.query.pages;
 		} else {
 			throw new Error("Could not read data from wikipedia");
 		}
 
-		var response = articles.map(article => ({
+		var response = Object.values(articles).map(article => ({
 			"url": getWikiUrlByPageId(article.pageid),
-			"primary": article.primary,
-			"distance": article.dist,
-			"ns": article.ns,
 			"title": article.title,
-			"lng": article.lon,
-			"lat": article.lat
-		}));
+			"lng": article.coordinates[0].lon,
+			"lat": article.coordinates[0].lat,
+            		"thumbnail": article.thumbnail
+		})));
+
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch(e) {
