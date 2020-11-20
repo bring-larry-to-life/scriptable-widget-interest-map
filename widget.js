@@ -42,6 +42,10 @@ const getCurrentLocation = async () => {
 // Script.setWidget(widget)
 // Script.complete()
 
+async function clickWidget(params) {
+	console.log(params);
+}
+
 /*
  * Returns an instance of ListWidget that contains the contents of this widget.
  * The widget returned consists of a background image, a greyscaled gradient and
@@ -169,5 +173,6 @@ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers
 }
 
 module.exports = {
-    createWidget
+	createWidget,
+	clickWidget
 }
