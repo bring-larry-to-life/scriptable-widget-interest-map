@@ -45,21 +45,26 @@ const createTable = (map, items) => {
 	mapRow.dismissOnSelect = false;
 	mapRow.height = 400;
 	table.addRow(mapRow);
+	let label = 'A';
 	items.forEach(item => {
 		console.log('ITEM');
 		console.log(item);
 		const row = new UITableRow();
+		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
+		const markerCell = row.addImageAtURL(markerUrl);
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
+		markerCell.widthWeight = 20;
 		imageCell.widthWeight = 20;
-		titleCell.widthWeight = 80;
+		titleCell.widthWeight = 40;
 		row.height = 60;
 		row.cellSpacing = 10;
 		row.onSelect = (index) => Safari.open(items[index].url);
 		row.dismissOnSelect = false;
 		table.addRow(row);
+		label = nextChar(label);
 	});
 	return table;
 }
