@@ -210,20 +210,20 @@ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers
 
 async function run(params) {
 	if (config.runsInWidget) {
-	    const widget = await library.createWidget(params)
+	    const widget = await createWidget(params)
 	    Script.setWidget(widget)
 	    Script.complete()
 	} else if (params.debug) {
-	    const widget = await library.createWidget(params)
+	    const widget = await createWidget(params)
 	    await widget.presentMedium()
 	} else {
-	    await library.clickWidget(params)
+	    await clickWidget(params)
 	}
 }
 
 (async function() {
 	if (Script.name() === 'interest-map') {
-		await run(params);
+		await run(JSON.stringify(args.widgetParameter));
 	}
 }());
 
