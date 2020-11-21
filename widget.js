@@ -1,3 +1,8 @@
+// const defaultParams = {
+//     apiKey: 'XXX',
+//     debug: false
+// }
+
 // Refresh interval in hours
 const refreshInterval = 6
 
@@ -213,24 +218,31 @@ async function run(params) {
 	    const widget = await createWidget(params)
 	    Script.setWidget(widget)
 	    Script.complete()
+
+	// Useful for loading widget and seeing logs manually
 	} else if (params.debug) {
 	    const widget = await createWidget(params)
 	    await widget.presentMedium()
+
 	} else {
 	    await clickWidget(params)
 	}
 }
 
+// Runs when the script itself is invoked
 (async function() {
 	if (Script.name() === 'interest-map') {
-       if (args.widgetParameter) {
-		await run(JSON.stringify(args.widgetParameter));
-       } else {
-        console.log("No valid parameters!")
-      }
+		const params = defaultParams ? defaultParams : args.widgetParameter;
+		
+		if (params) {
+			await run(JSON.parse(params));
+		} else {
+			console.log("No valid parameters!")
+		}
 	}
 }());
 
+// Runs when a proxy script is invoked
 module.exports = function(params) {
 	(async function() {
 		if (Script.name() !== 'interest-map') {
