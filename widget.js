@@ -43,6 +43,7 @@ const createTable = (map, items) => {
 	const mapCell = mapRow.addImage(map);
 	mapCell.widthWeight = 100;
 	mapRow.dismissOnSelect = false;
+	mapRow.height = 400;
 	table.addRow(mapRow);
 	items.forEach(item => {
 		console.log('ITEM');
