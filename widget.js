@@ -76,15 +76,6 @@ const createTable = (currLocation, map, items) => {
 	return table;
 }
 
-// Uncomment this if you want to run the widget locally
-// const widget = await createWidget()
-// if (!config.runsInWidget) 
-// {
-// 	await widget.presentMedium()
-// }
-// Script.setWidget(widget)
-// Script.complete()
-
 async function clickWidget(params) {
 	const { apiKey } = params;
 	let currLocation = await getCurrentLocation();
@@ -217,7 +208,29 @@ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers
 	}
 }
 
-module.exports = {
-	createWidget,
-	clickWidget
+async function run(params) {
+	if (config.runsInWidget) {
+	    const widget = await library.createWidget(params)
+	    Script.setWidget(widget)
+	    Script.complete()
+	} else if (params.debug) {
+	    const widget = await library.createWidget(params)
+	    await widget.presentMedium()
+	} else {
+	    await library.clickWidget(params)
+	}
+}
+
+(async function() {
+	if (Script.name() === 'interest-map') {
+		await run(params);
+	}
+}());
+
+module.exports = function(params) {
+	(async function() {
+		if (Script.name() !== 'interest-map') {
+			await run(params);
+		}
+	}());
 }
