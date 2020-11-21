@@ -37,7 +37,11 @@ const getCurrentLocation = async () => {
 	}, err => console.log(`Could not get current location: ${err}`));
 };
 
-const createTable = (map, items) => {
+const getDirectionsUrl = (currLocation, destination) => {
+	return `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
+}
+
+const createTable = (currLocation, map, items) => {
 	const table = new UITable();
 	const mapRow = new UITableRow();
 	const mapCell = mapRow.addImage(map);
@@ -54,9 +58,11 @@ const createTable = (map, items) => {
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
 		const markerCell = row.addImageAtURL(markerUrl);
-		markerCell.onTap = () => Safari.open('https://www.google.com');
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
+		markerCell.onTap = () => Safari.open(getDirectionsUrl(currLocation, { latitude: item.lat, longitude: item.lng }));
+		imageCell.onTap = () => Safari.open(item.url);
+		titleCell.onTap = () => Safari.open(item.url);
 		markerCell.widthWeight = 10;
 		imageCell.widthWeight = 20;
 		titleCell.widthWeight = 50;
@@ -84,7 +90,7 @@ async function clickWidget(params) {
 	let currLocation = await getCurrentLocation();
 	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
 	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
-	const table = createTable(selection.image, wikiArticles);
+	const table = createTable(currLocation, selection.image, wikiArticles);
 	await QuickLook.present(table);
 }
 
