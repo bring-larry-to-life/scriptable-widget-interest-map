@@ -57,17 +57,18 @@ const createTable = (currLocation, map, items) => {
 		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
-		const markerCell = row.addImageAtURL(markerUrl);
+		const markerCell = row.addButton(label);
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
 		markerCell.onTap = () => Safari.open(getDirectionsUrl(currLocation, { latitude: item.lat, longitude: item.lng }));
-		imageCell.onTap = () => Safari.open(item.url);
-		titleCell.onTap = () => Safari.open(item.url);
+		// imageCell.onTap = () => Safari.open(item.url);
+		// titleCell.onTap = () => Safari.open(item.url);
 		markerCell.widthWeight = 10;
 		imageCell.widthWeight = 20;
 		titleCell.widthWeight = 50;
 		row.height = 60;
 		row.cellSpacing = 10;
+		row.onSelect = () => Safari.open(item.url);
 		row.dismissOnSelect = false;
 		table.addRow(row);
 		label = nextChar(label);
