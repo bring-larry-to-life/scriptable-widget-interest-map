@@ -42,6 +42,8 @@ const createTable = (map, items) => {
 	const mapRow = new UITableRow();
 	const mapCell = mapRow.addImage(map);
 	mapCell.widthWeight = 100;
+	mapRow.dismissOnSelect = false;
+	table.addRow(mapRow);
 	items.forEach(item => {
 		console.log('ITEM');
 		console.log(item);
