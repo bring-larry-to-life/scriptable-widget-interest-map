@@ -56,9 +56,9 @@ const createTable = (map, items) => {
 		const markerCell = row.addImageAtURL(markerUrl);
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
-		markerCell.widthWeight = 20;
+		markerCell.widthWeight = 10;
 		imageCell.widthWeight = 20;
-		titleCell.widthWeight = 40;
+		titleCell.widthWeight = 50;
 		row.height = 60;
 		row.cellSpacing = 10;
 		row.onSelect = (index) => Safari.open(items[index].url);
