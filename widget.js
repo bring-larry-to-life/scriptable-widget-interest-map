@@ -68,7 +68,6 @@ const createTable = (currLocation, map, items) => {
 		titleCell.widthWeight = 50;
 		row.height = 60;
 		row.cellSpacing = 10;
-		row.onSelect = () => Safari.open(item.url);
 		row.dismissOnSelect = false;
 		table.addRow(row);
 		label = nextChar(label);
