@@ -223,7 +223,11 @@ async function run(params) {
 
 (async function() {
 	if (Script.name() === 'interest-map') {
+       if (args.widgetParameter) {
 		await run(JSON.stringify(args.widgetParameter));
+       } else {
+        console.log("No valid parameters!")
+      }
 	}
 }());
 
