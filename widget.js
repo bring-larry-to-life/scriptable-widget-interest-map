@@ -1,4 +1,4 @@
-// const defaultParams = {
+const defaultParams = null //{
 //     apiKey: 'XXX',
 //     debug: false
 // }
@@ -232,7 +232,13 @@ async function run(params) {
 // Runs when the script itself is invoked
 (async function() {
 	if (Script.name() === 'interest-map') {
-		const params = defaultParams ? defaultParams : args.widgetParameter;
+        let params;
+        if (defaultParams) {
+            params = defaultParams
+        } else {
+            params = args.widgetParameter
+        }
+        console.log(params)
 		
 		if (params) {
 			await run(JSON.parse(params));
