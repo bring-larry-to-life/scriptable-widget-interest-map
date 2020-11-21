@@ -54,6 +54,7 @@ const createTable = (map, items) => {
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
 		const markerCell = row.addImageAtURL(markerUrl);
+		markerCell.onTap = () => Safari.open('https://www.google.com');
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
 		markerCell.widthWeight = 10;
