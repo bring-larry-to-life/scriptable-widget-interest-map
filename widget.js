@@ -37,8 +37,11 @@ const getCurrentLocation = async () => {
 	}, err => console.log(`Could not get current location: ${err}`));
 };
 
-const createTable = (items) => {
+const createTable = (map, items) => {
 	const table = new UITable();
+	const mapRow = new UITableRow();
+	const mapCell = mapRow.addImage(map);
+	mapCell.widthWeight = 100;
 	items.forEach(item => {
 		console.log('ITEM');
 		console.log(item);
@@ -71,7 +74,8 @@ async function clickWidget(params) {
 	const { apiKey } = params;
 	let currLocation = await getCurrentLocation();
 	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
-	const table = createTable(wikiArticles);
+	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
+	const table = createTable(selection.image, wikiArticles);
 	await QuickLook.present(table);
 }
 
