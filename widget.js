@@ -246,7 +246,9 @@ async function run(params) {
 			console.log("No valid parameters!")
 		}
 	}
-}());
+}()).catch((err) => {
+	console.error(err);
+});
 
 // Runs when a proxy script is invoked
 module.exports = function(params) {
@@ -254,5 +256,7 @@ module.exports = function(params) {
 		if (Script.name() !== 'interest-map') {
 			await run(params);
 		}
-	}());
+	}()).catch((err) => {
+		console.error(err);
+	});
 }
