@@ -13,9 +13,21 @@ const defaultParams = null //{
 // Refresh interval in hours
 const refreshInterval = 6
 
+const performanceResults = {};
+
 /*******************************
  ****** UTILITY FUNCTIONS ******
  *******************************/
+
+ const performanceWrapper = (fn, args) => {
+	 const start = Date.now();
+	 fn.apply(this.args);
+	 const end = Date.now();
+	 performanceResults.push({
+		 functionName: fn.name,
+		 time: end - start
+	});
+ }
 
 // Get user's current latitude and longitude
 const getCurrentLocation = async () => {
@@ -199,10 +211,10 @@ async function createWidget(params)
 {
 	const { apiKey } = params;
 	let widget = new ListWidget()
-	let currLocation = await getCurrentLocation();
-	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
+	let currLocation = await performanceWrapper(getCurrentLocation);
+	let wikiArticles = await performanceWrapper(getNearbyWikiArticlescurrLocation.latitude,currLocation.longitude);
 	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
-	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
+	let selection = await performanceWrapper(getMapsPicByCurrentLocations[apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
@@ -221,6 +233,8 @@ async function createWidget(params)
 	
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
+
+	console.log(performanceResults);
 	
     return widget
 }
