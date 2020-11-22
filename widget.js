@@ -52,6 +52,18 @@ const nextChar = (c) => {
 // Endpoint for Static Google Maps API
 const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
 
+/*
+ * Gets the maps size for Google Maps' static API.
+ * Returns the size for a square by default.
+ */
+const getMapSize = (widgetSize) => {
+    if (widgetSize === 'medium') {
+        return '800x500'
+    } else {
+        return '800x800'
+    }
+}
+
 // Construct Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
