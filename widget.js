@@ -270,14 +270,14 @@ async function run(params) {
 	if (Script.name() === 'interest-map') {
         let params;
         if (defaultParams) {
-            params = defaultParams
+            params = defaultParams;
         } else {
-            params = args.widgetParameter
+            params = JSON.parse(args.widgetParameter);
         }
         console.log(params)
 		
 		if (params) {
-			await run(JSON.parse(params));
+			await run(params);
 		} else {
 			console.log("No valid parameters!")
 		}
