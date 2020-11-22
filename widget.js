@@ -1,3 +1,10 @@
+/*
+ * Authors: Ryan Stanley (stanleyrya@gmail.com), Jason Morse (jasonkylemorse@gmail.com)
+ * Description: Scriptable code to display Google Maps image widget with nearby points of 
+ * interest, sourced from Wikipedia. Clicking on the map opens a list of locations with photos,
+ * titles, and quick links to Wikipedia and Google Maps directions. 
+ */
+
 const defaultParams = null //{
 //     apiKey: 'XXX',
 //     debug: false
@@ -6,12 +13,37 @@ const defaultParams = null //{
 // Refresh interval in hours
 const refreshInterval = 6
 
-const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
+/*******************************
+ ****** UTILITY FUNCTIONS ******
+ *******************************/
 
+// Get user's current latitude and longitude
+const getCurrentLocation = async () => {
+	Location.setAccuracyToTenMeters();
+return Location.current().then((res) => { 
+	return {
+		'latitude': res.latitude, 
+		'longitude': res.longitude 
+	};
+}, err => console.log(`Could not get current location: ${err}`));
+};
+
+// Utility function to increment alphabetically for map markers
 const nextChar = (c) => {
     return String.fromCharCode(c.charCodeAt(0) + 1);
 }
 
+/*******************************
+ **** GOOGLE MAPS FUNCTIONS ****
+ *******************************/
+
+// Endpoint for Static Google Maps API
+const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
+
+// Construct Google Maps API URI given city input
+const getMapUrlByCity = (apiKey, city, zoom = '14') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
+
+// Construct Google Maps API URI given user latitude, longitude, and list of markers
 const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14', size='800x800') => {
 	const center = `${userLat},${userLng}`;
 	if (markers.length >= 1) {
@@ -25,110 +57,7 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14
 	return `${googleMapsBaseUri}?center=${center}&zoom=${zoom}&size=${size}&key=${apiKey}&markers=color:blue|${center}`;
 }
 
-// Build Google Maps API URI given city input
-const getMapUrlByCity = (apiKey, city, zoom = '14') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
-
-const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?curid=${pageId}`;
-const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates|pageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`
-
-// Get user's current location. Returns { latitude, longitude }
-const getCurrentLocation = async () => {
-        Location.setAccuracyToTenMeters();
-	return Location.current().then((res) => { 
-		return {
-			'latitude': res.latitude, 
-			'longitude': res.longitude 
-		};
-	}, err => console.log(`Could not get current location: ${err}`));
-};
-
-const getDirectionsUrl = (currLocation, destination) => {
-	return `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
-}
-
-const createTable = (currLocation, map, items) => {
-	const table = new UITable();
-	const mapRow = new UITableRow();
-	const mapCell = mapRow.addImage(map);
-	mapCell.widthWeight = 100;
-	mapRow.dismissOnSelect = false;
-	mapRow.height = 400;
-	table.addRow(mapRow);
-	let label = 'A';
-	items.forEach(item => {
-		console.log('ITEM');
-		console.log(item);
-		const row = new UITableRow();
-		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`
-		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
-		const title = item.title;
-		const markerCell = row.addButton(label);
-		const imageCell = row.addImageAtURL(imageUrl);
-		const titleCell = row.addText(title);
-		markerCell.onTap = () => Safari.open(getDirectionsUrl(currLocation, { latitude: item.lat, longitude: item.lng }));
-		// imageCell.onTap = () => Safari.open(item.url);
-		// titleCell.onTap = () => Safari.open(item.url);
-		markerCell.widthWeight = 10;
-		imageCell.widthWeight = 20;
-		titleCell.widthWeight = 50;
-		row.height = 60;
-		row.cellSpacing = 10;
-		row.onSelect = () => Safari.open(item.url);
-		row.dismissOnSelect = false;
-		table.addRow(row);
-		label = nextChar(label);
-	});
-	return table;
-}
-
-async function clickWidget(params) {
-	const { apiKey } = params;
-	let currLocation = await getCurrentLocation();
-	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
-	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
-	const table = createTable(currLocation, selection.image, wikiArticles);
-	await QuickLook.present(table);
-}
-
-/*
- * Returns an instance of ListWidget that contains the contents of this widget.
- * The widget returned consists of a background image, a greyscaled gradient and
- * the image title in the slightly darker part of the grandient in the lower 
- * left corner of the widget.
- */
-async function createWidget(params)
-{
-	const { apiKey } = params;
-	let widget = new ListWidget()
-	let currLocation = await getCurrentLocation();
-	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
-	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
-	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
-	widget.backgroundImage = selection.image
-	widget.addSpacer()
-	
-	let startColor = new Color("#1c1c1c00")
-	let endColor = new Color("#1c1c1cb4")
-	let gradient = new LinearGradient()
-	gradient.colors = [startColor, endColor]
-	gradient.locations = [0.25, 1]
-	widget.backgroundGradient = gradient
-	widget.backgroundColor = new Color("1c1c1c")
-	
-	let titleText = widget.addText(selection.title)
-	titleText.font = Font.thinSystemFont(12)
-	titleText.textColor = Color.white()
-	titleText.leftAlignText()
-	
-	let interval = 1000 * 60 * 60 * refreshInterval
-	widget.refreshAfterDate = new Date(Date.now() + interval)
-	
-    return widget
-}
-
-/*
- * Returns object containing static Google Maps image response and widget title
- */
+// Returns object containing static Google Maps image response (by city) and widget title
 async function getMapsPicByCity(apiKey, city) {
 	try {
 		console.log('Request URI');
@@ -141,6 +70,33 @@ async function getMapsPicByCity(apiKey, city) {
 		return null;
 	}
 }
+
+// Returns object containing static Google Maps image response (by specific location & markers) and widget title
+ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
+	try {
+		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
+		console.log('Request URI');
+		console.log(uri);
+		const mapPicRequest = new Request(encodeURI(uri));
+		const mapPic = await mapPicRequest.loadImage();
+		return { image: mapPic, title: 'Current Location' };
+	} catch(e) {
+		console.error(e)
+		return null;
+	}
+}
+
+// Returns Google Maps directions direct link from current location to point of interest
+const getDirectionsUrl = (currLocation, destination) => {
+	return `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
+}
+
+/*******************************
+ ***** WIKIPEDIA FUNCTIONS *****
+ *******************************/
+
+const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?curid=${pageId}`;
+const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates|pageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`
 
 /*
  * Calls wikipedia for nearby articles and modifies the object for ease of use.
@@ -196,22 +152,88 @@ async function getNearbyWikiArticles(lat, lng) {
 	}
 }
 
- /* 
-  * Returns object containing static Google Maps image response and widget title
-  */
-async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
-	try {
-		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
-		console.log('Request URI');
-		console.log(uri);
-		const mapPicRequest = new Request(encodeURI(uri));
-		const mapPic = await mapPicRequest.loadImage();
-		return { image: mapPic, title: 'Current Location' };
-	} catch(e) {
-		console.error(e)
-		return null;
-	}
+/*****************************************
+ ***** SCRIPTABLE & WIDGET FUNCTIONS *****
+ *****************************************/
+
+const createTable = (currLocation, map, items) => {
+	const table = new UITable();
+	const mapRow = new UITableRow();
+	const mapCell = mapRow.addImage(map);
+	mapCell.widthWeight = 100;
+	mapRow.dismissOnSelect = false;
+	mapRow.height = 400;
+	table.addRow(mapRow);
+	let label = 'A';
+	items.forEach(item => {
+		console.log('ITEM');
+		console.log(item);
+		const row = new UITableRow();
+		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`
+		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
+		const title = item.title;
+		const markerCell = row.addButton(label);
+		const imageCell = row.addImageAtURL(imageUrl);
+		const titleCell = row.addText(title);
+		markerCell.onTap = () => Safari.open(getDirectionsUrl(currLocation, { latitude: item.lat, longitude: item.lng }));
+		markerCell.widthWeight = 10;
+		imageCell.widthWeight = 20;
+		titleCell.widthWeight = 50;
+		row.height = 60;
+		row.cellSpacing = 10;
+		row.onSelect = () => Safari.open(item.url);
+		row.dismissOnSelect = false;
+		table.addRow(row);
+		label = nextChar(label);
+	});
+	return table;
 }
+
+/*
+ * Returns an instance of ListWidget that contains the contents of this widget.
+ * The widget returned consists of a background image, a greyscaled gradient and
+ * the image title in the slightly darker part of the grandient in the lower 
+ * left corner of the widget.
+ */
+async function createWidget(params)
+{
+	const { apiKey } = params;
+	let widget = new ListWidget()
+	let currLocation = await getCurrentLocation();
+	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
+	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
+	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
+	widget.backgroundImage = selection.image
+	widget.addSpacer()
+	
+	let startColor = new Color("#1c1c1c00")
+	let endColor = new Color("#1c1c1cb4")
+	let gradient = new LinearGradient()
+	gradient.colors = [startColor, endColor]
+	gradient.locations = [0.25, 1]
+	widget.backgroundGradient = gradient
+	widget.backgroundColor = new Color("1c1c1c")
+	
+	let titleText = widget.addText(selection.title)
+	titleText.font = Font.thinSystemFont(12)
+	titleText.textColor = Color.white()
+	titleText.leftAlignText()
+	
+	let interval = 1000 * 60 * 60 * refreshInterval
+	widget.refreshAfterDate = new Date(Date.now() + interval)
+	
+    return widget
+}
+
+async function clickWidget(params) {
+	const { apiKey } = params;
+	let currLocation = await getCurrentLocation();
+	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
+	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
+	const table = createTable(currLocation, selection.image, wikiArticles);
+	await QuickLook.present(table);
+}
+
 
 async function run(params) {
 	if (config.runsInWidget) {
