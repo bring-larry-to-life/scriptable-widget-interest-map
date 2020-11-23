@@ -3,6 +3,17 @@ const refreshInterval = 6
 
 const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
 
+// Get user's current latitude and longitude
+const getCurrentLocation = async () => {
+	Location.setAccuracyToTenMeters();
+return Location.current().then((res) => { 
+	return {
+		'latitude': res.latitude, 
+		'longitude': res.longitude 
+	};
+}, err => console.log(`Could not get current location: ${err}`));
+};
+
 const nextChar = (c) => {
     return String.fromCharCode(c.charCodeAt(0) + 1);
 }
