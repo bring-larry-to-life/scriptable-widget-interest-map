@@ -27,6 +27,48 @@ const performanceResultsInMillis = {};
 	return result;
  }
 
+function appendPerformanceDataToFile(performanceMetrics) {
+    let fm = FileManager.local()
+
+    let scriptName = module.filename
+    let scriptNameWithoutExtention = scriptName.replace(".js", "");
+    let metricsPath = scriptNameWithoutExtention +  '-performance-metrics.csv'
+
+    let headersAvailable = Object.getOwnPropertyNames(performanceMetrics);
+
+    let headers;
+    let fileData;
+
+    if (fm.fileExists(metricsPath)) {
+        console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+        fileData = fm.readString(metricsPath);
+        let firstLine = getFirstLine(fileData);
+        headers = firstLine.split(',');
+    } else {
+        console.log("File doesn't exist, using available headers.");
+        headers = headersAvailable;
+        fileData = headers.toString();
+    }
+
+    // Append the data if it exists for the available headers
+    fileData = fileData.concat("\n");
+    for (const header of headers) {
+        if (performanceMetrics[header]) {
+            fileData = fileData.concat(performanceMetrics[header]);
+        }
+        fileData = fileData.concat(",");
+    }
+    fileData = fileData.slice(0, -1);
+
+    fm.writeString(metricsPath, fileData);
+}
+
+function getFirstLine(text) {
+    var index = text.indexOf("\n");
+    if (index === -1) index = undefined;
+    return text.substring(0, index);
+}
+
 // Get user's current latitude and longitude
 const getCurrentLocation = async () => {
 	Location.setAccuracyToTenMeters();
@@ -271,7 +313,7 @@ async function run(params) {
 	} else {
 	    await clickWidget(params)
 	}
-	console.log(performanceResultsInMillis);
+	appendPerformanceDataToFile(performanceResultsInMillis);
 }
 
 // Runs when the script itself is invoked
