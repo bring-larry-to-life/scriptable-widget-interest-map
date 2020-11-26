@@ -23,10 +23,7 @@ const performanceResults = {};
 	 const start = Date.now();
 	 const result = await fn.apply(null, args);
 	 const end = Date.now();
-	 performanceResults.push({
-		 functionName: fn.name,
-		 time: end - start
-	});
+	 performanceResults[fn.name] = (end - start);
     return result;
  }
 
