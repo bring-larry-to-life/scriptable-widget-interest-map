@@ -19,14 +19,15 @@ const performanceResults = {};
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
- const performanceWrapper = (fn, args) => {
+ const performanceWrapper = async (fn, args) => {
 	 const start = Date.now();
-	 fn.apply(this.args);
+	 const result = await fn.apply(null, args);
 	 const end = Date.now();
 	 performanceResults.push({
 		 functionName: fn.name,
 		 time: end - start
 	});
+    return result;
  }
 
 // Get user's current latitude and longitude
@@ -224,9 +225,9 @@ async function createWidget(params)
 	const { apiKey } = params;
 	let widget = new ListWidget()
 	let currLocation = await performanceWrapper(getCurrentLocation);
-	let wikiArticles = await performanceWrapper(getNearbyWikiArticlescurrLocation.latitude,currLocation.longitude);
+	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude,currLocation.longitude]);
 	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
-	let selection = await performanceWrapper(getMapsPicByCurrentLocations[apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	let selection = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
 	
