@@ -13,29 +13,29 @@ const defaultParams = null //{
 // Refresh interval in hours
 const refreshInterval = 6
 
-const performanceResults = {};
+const performanceResultsInMillis = {};
 
 /*******************************
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
  const performanceWrapper = async (fn, args) => {
-	 const start = Date.now();
-	 const result = await fn.apply(null, args);
-	 const end = Date.now();
-	 performanceResults[fn.name] = (end - start);
-    return result;
+	const start = Date.now();
+	const result = await fn.apply(null, args);
+	const end = Date.now();
+	performanceResultsInMillis[fn.name] = (end - start);
+	return result;
  }
 
 // Get user's current latitude and longitude
 const getCurrentLocation = async () => {
 	Location.setAccuracyToTenMeters();
-return Location.current().then((res) => { 
-	return {
-		'latitude': res.latitude, 
-		'longitude': res.longitude 
-	};
-}, err => console.log(`Could not get current location: ${err}`));
+	return Location.current().then((res) => { 
+		return {
+			'latitude': res.latitude, 
+			'longitude': res.longitude 
+		};
+	}, err => console.log(`Could not get current location: ${err}`));
 };
 
 // Utility function to increment alphabetically for map markers
@@ -222,12 +222,12 @@ async function createWidget(params)
 	const { apiKey } = params;
 	let widget = new ListWidget()
 	let currLocation = await performanceWrapper(getCurrentLocation);
-	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude,currLocation.longitude]);
-	// let selection = await getMapsPicByCity(apiKey, 'Boston, MA');
+	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	// let selection = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let selection = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = selection.image
 	widget.addSpacer()
-	
+
 	let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
 	let gradient = new LinearGradient()
@@ -235,25 +235,23 @@ async function createWidget(params)
 	gradient.locations = [0.25, 1]
 	widget.backgroundGradient = gradient
 	widget.backgroundColor = new Color("1c1c1c")
-	
+
 	let titleText = widget.addText(selection.title)
 	titleText.font = Font.thinSystemFont(12)
 	titleText.textColor = Color.white()
 	titleText.leftAlignText()
-	
+
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
-
-	console.log(performanceResults);
 	
-    return widget
+	return widget
 }
 
 async function clickWidget(params) {
 	const { apiKey } = params;
-	let currLocation = await getCurrentLocation();
-	let wikiArticles = await getNearbyWikiArticles(currLocation.latitude,currLocation.longitude);
-	let selection = await getMapsPicByCurrentLocations(apiKey, currLocation.latitude, currLocation.longitude, wikiArticles);
+	let currLocation = await performanceWrapper(getCurrentLocation);
+	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	let selection = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	const table = createTable(currLocation, selection.image, wikiArticles);
 	await QuickLook.present(table);
 }
@@ -273,6 +271,7 @@ async function run(params) {
 	} else {
 	    await clickWidget(params)
 	}
+	console.log(performanceResultsInMillis);
 }
 
 // Runs when the script itself is invoked
