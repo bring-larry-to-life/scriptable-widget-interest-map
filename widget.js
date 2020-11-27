@@ -71,7 +71,7 @@ function getFirstLine(text) {
 
 // Get user's current latitude and longitude
 const getCurrentLocation = async () => {
-	Location.setAccuracyToTenMeters();
+	await Location.setAccuracyToHundredMeters();
 	return Location.current().then((res) => { 
 		return {
 			'latitude': res.latitude, 
@@ -153,6 +153,11 @@ async function getMapsPicByCity(apiKey, city) {
 // Returns Google Maps directions direct link from current location to point of interest
 const getDirectionsUrl = (currLocation, destination) => {
 	return `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
+}
+
+// Returns Google Maps direct link for point of interest
+const getCoordsUrl = (destination) => {
+    return `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
 }
 
 /*******************************
@@ -239,7 +244,7 @@ const createTable = (currLocation, map, items) => {
 		const markerCell = row.addButton(label);
 		const imageCell = row.addImageAtURL(imageUrl);
 		const titleCell = row.addText(title);
-		markerCell.onTap = () => Safari.open(getDirectionsUrl(currLocation, { latitude: item.lat, longitude: item.lng }));
+		markerCell.onTap = () => Safari.open(getCoordsUrl({ latitude: item.lat, longitude: item.lng }));
 		markerCell.widthWeight = 10;
 		imageCell.widthWeight = 20;
 		titleCell.widthWeight = 50;
