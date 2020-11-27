@@ -80,6 +80,15 @@ const getCurrentLocation = async () => {
 	}, err => console.log(`Could not get current location: ${err}`));
 };
 
+// Given coordinates, return a description of the current location in words (town name, etc.)
+const getLocationDescription = async (lat, long) => {
+	return Location.reverseGeocode(lat, long).then((res) => {
+        console.log(res)
+		return res[0]["locality"];
+	}, err => console.log(`Could not 
+reverse geocode location: ${err}`));
+};
+
 // Utility function to increment alphabetically for map markers
 const nextChar = (c) => {
     return String.fromCharCode(c.charCodeAt(0) + 1);
@@ -135,15 +144,14 @@ async function getMapsPicByCity(apiKey, city) {
 	}
 }
 
-// Returns object containing static Google Maps image response (by specific location & markers) and widget title
+// Returns object containing static Google Maps image response (by specific location & markers)
  async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
 	try {
 		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
 		console.log('Request URI');
 		console.log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
-		const mapPic = await mapPicRequest.loadImage();
-		return { image: mapPic, title: 'Current Location' };
+		return await mapPicRequest.loadImage();
 	} catch(e) {
 		console.error(e)
 		return null;
@@ -271,8 +279,8 @@ async function createWidget(params)
 	let currLocation = await performanceWrapper(getCurrentLocation);
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	// let selection = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
-	let selection = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-	widget.backgroundImage = selection.image
+	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	widget.backgroundImage = image
 	widget.addSpacer()
 
 	let startColor = new Color("#1c1c1c00")
@@ -283,7 +291,7 @@ async function createWidget(params)
 	widget.backgroundGradient = gradient
 	widget.backgroundColor = new Color("1c1c1c")
 
-	let titleText = widget.addText(selection.title)
+	let titleText = widget.addText(await getLocationDescription(currLocation.latitude, currLocation.longitude))
 	titleText.font = Font.thinSystemFont(12)
 	titleText.textColor = Color.white()
 	titleText.leftAlignText()
