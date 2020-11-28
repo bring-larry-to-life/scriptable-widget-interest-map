@@ -327,11 +327,22 @@ async function createWidget(params)
 	widget.backgroundColor = new Color("1c1c1c")
 
 	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
-	const displayText = currentLocationDescription.areaOfInterest ? currentLocationDescription.areaOfInterest : currentLocationDescription.generalArea;
-	let titleText = widget.addText(displayText)
-	titleText.font = Font.thinSystemFont(12)
-	titleText.textColor = Color.white()
-	titleText.leftAlignText()
+	let primaryLocationDescription;
+	let secondaryLocationDescription;
+	if (currentLocationDescription.areaOfInterest) {
+		primaryLocationDescription = currentLocationDescription.areaOfInterest;
+		secondaryLocationDescription = currentLocationDescription.generalArea ? currentLocationDescription.generalArea : null;
+	} else if (currentLocationDescription.generalArea) {
+		primaryLocationDescription = currentLocationDescription.generalArea;
+	}
+
+	let primaryTitleText = widget.addText(primaryLocationDescription)
+	if (secondaryLocationDescription) {
+		let secondaryTitleText = widget.addText(secondaryLocationDescription)
+		secondaryTitleText.font = Font.thinSystemFont(12)
+		secondaryTitleText.textColor = Color.white()
+		secondaryTitleText.leftAlignText()
+	}
 
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
