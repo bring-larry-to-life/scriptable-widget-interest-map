@@ -80,13 +80,48 @@ const getCurrentLocation = async () => {
 	}, err => console.log(`Could not get current location: ${err}`));
 };
 
-// Given coordinates, return a description of the current location in words (town name, etc.)
+// Given coordinates, return a description of the current location in words (town name, etc.).
+// Object returned has two properties:
+// {
+//   "areaOfInterest": "Spot Pond - Middlesex Fells Reservation",
+//   "generalArea": "Medford, MA"
+// }
+// 
+// More information here: https://github.com/stanleyrya/scriptable-playground/blob/main/reverse-geocode-tests.js
 const getLocationDescription = async (lat, long) => {
 	return Location.reverseGeocode(lat, long).then((res) => {
-        console.log(res)
-		return res[0]["locality"];
-	}, err => console.log(`Could not 
-reverse geocode location: ${err}`));
+		const response = res[0];
+
+		let areaOfInterest = "";
+		if (response.inlandWater) {
+			areaOfInterest += response.inlandWater
+		} else if (response.ocean) {
+			areaOfInterest += response.ocean;
+		}
+		if (areaOfInterest && response.areasOfInterest) {
+			areaOfInterest += ' - ';
+		}
+		if (response.areasOfInterest) {
+			// To keep it simple, just grab the first one.
+			areaOfInterest += response.areasOfInterest[0];
+		}
+
+		let generalArea = "";
+		if (response.locality) {
+			generalArea += response.locality;
+		}
+		if (generalArea && response.administrativeArea) {
+			generalArea += ', ';
+		}
+		if (response.administrativeArea) {
+			generalArea += response.administrativeArea;
+		}
+
+		return {
+			areaOfInterest: areaOfInterest ? areaOfInterest : null,
+			generalArea: generalArea ? generalArea : null
+		};
+	}, err => console.log(`Could not reverse geocode location: ${err}`));
 };
 
 // Utility function to increment alphabetically for map markers
@@ -291,7 +326,9 @@ async function createWidget(params)
 	widget.backgroundGradient = gradient
 	widget.backgroundColor = new Color("1c1c1c")
 
-	let titleText = widget.addText(await getLocationDescription(currLocation.latitude, currLocation.longitude))
+	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
+	const displayText = currentLocationDescription.areaOfInterest ? currentLocationDescription.areaOfInterest : currentLocationDescription.generalArea;
+	let titleText = widget.addText(displayText)
 	titleText.font = Font.thinSystemFont(12)
 	titleText.textColor = Color.white()
 	titleText.leftAlignText()
