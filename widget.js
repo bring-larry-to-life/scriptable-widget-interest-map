@@ -310,21 +310,36 @@ const createTable = (currLocation, map, items) => {
 async function createWidget(params)
 {
 	const { apiKey } = params;
-	let widget = new ListWidget()
+	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	// let selection = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
+	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-	widget.backgroundImage = image
-	widget.addSpacer()
+	widget.backgroundImage = image;
 
-	let startColor = new Color("#1c1c1c00")
+    let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
 	let gradient = new LinearGradient()
 	gradient.colors = [startColor, endColor]
 	gradient.locations = [0.25, 1]
 	widget.backgroundGradient = gradient
 	widget.backgroundColor = new Color("1c1c1c")
+
+    let textStack = widget.addStack();
+    textStack.layoutHorizontally();
+    textStack.bottomAlignContent();
+
+    let titleStack = textStack.addStack();
+    titleStack.layoutVertically();
+    titleStack.bottomAlignContent();
+    titleStack.addSpacer()
+    
+    textStack.addSpacer()
+
+    let additionalInfoStack = textStack.addStack();
+    additionalInfoStack.layoutVertically();
+    additionalInfoStack.bottomAlignContent();
+    additionalInfoStack.addSpacer()
 
 	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
 	let primaryLocationDescription;
@@ -336,13 +351,25 @@ async function createWidget(params)
 		primaryLocationDescription = currentLocationDescription.generalArea;
 	}
 
-	let primaryTitleText = widget.addText(primaryLocationDescription)
+	let primaryTitleText = titleStack.addText(primaryLocationDescription)
+    primaryTitleText.leftAlignText();
 	if (secondaryLocationDescription) {
-		let secondaryTitleText = widget.addText(secondaryLocationDescription)
+		let secondaryTitleText = titleStack.addText(secondaryLocationDescription)
 		secondaryTitleText.font = Font.thinSystemFont(12)
 		secondaryTitleText.textColor = Color.white()
 		secondaryTitleText.leftAlignText()
 	}
+
+    let sourceText = additionalInfoStack.addText("Wikipedia")
+	sourceText.font = Font.thinSystemFont(12)
+	sourceText.textColor = Color.white()
+	sourceText.rightAlignText()
+
+    let lastUpdatedDate = additionalInfoStack.addDate(new Date())
+    lastUpdatedDate.applyTimeStyle()
+	lastUpdatedDate.font = Font.thinSystemFont(12)
+	lastUpdatedDate.textColor = Color.white()
+	lastUpdatedDate.rightAlignText()
 
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
