@@ -354,8 +354,8 @@ async function clickWidget(params) {
 	const { apiKey } = params;
 	let currLocation = await performanceWrapper(getCurrentLocation);
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	let selection = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-	const table = createTable(currLocation, selection.image, wikiArticles);
+	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	const table = createTable(currLocation, image, wikiArticles);
 	await QuickLook.present(table);
 }
 
