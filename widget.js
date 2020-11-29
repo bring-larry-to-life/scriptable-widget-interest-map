@@ -439,39 +439,21 @@ async function run(params) {
 	} else {
 	    await clickWidget(params)
 	}
-	appendPerformanceDataToFile(performanceResultsInMillis);
+    appendPerformanceDataToFile(performanceResultsInMillis);
 }
 
-// Runs when the script itself is invoked
-(async function() {
-	if (Script.name() === 'interest-map') {
-        let params;
-        if (defaultParams) {
-            params = defaultParams;
-        } else  if (args.widgetParameter) {
-            params = JSON.parse(args.widgetParameter);
-        } else {
-            params = loadStoredParameters();
-        }
-		
-		if (params) {
-            console.log("Using params: " + JSON.stringify(params))
-			await run(params);
-		} else {
-			console.log("No valid parameters!")
-		}
-	}
-}()).catch((err) => {
-	console.error(err);
-});
+let params;
+if (defaultParams) {
+    params = defaultParams;
+} else  if (args.widgetParameter) {
+    params = JSON.parse(args.widgetParameter);
+} else {
+    params = loadStoredParameters();
+}
 
-// Runs when a proxy script is invoked
-module.exports = function(params) {
-	(async function() {
-		if (Script.name() !== 'interest-map') {
-			await run(params);
-		}
-	}()).catch((err) => {
-		console.error(err);
-	});
+if (params) {
+    console.log("Using params: " + JSON.stringify(params))
+	await run(params);
+} else {
+    console.log("No valid parameters!")
 }
