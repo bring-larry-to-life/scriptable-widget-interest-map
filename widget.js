@@ -407,25 +407,26 @@ async function createWidget(params)
 		primaryLocationDescription = currentLocationDescription.generalArea;
 	}
 
-	let primaryTitleText = titleStack.addText(primaryLocationDescription)
+	let primaryTitleText = titleStack.addText(primaryLocationDescription);
     primaryTitleText.leftAlignText();
+    primaryTitleText.textColor = Color.white();
 	if (secondaryLocationDescription) {
-		let secondaryTitleText = titleStack.addText(secondaryLocationDescription)
-		secondaryTitleText.font = Font.thinSystemFont(12)
-		secondaryTitleText.textColor = Color.white()
-		secondaryTitleText.leftAlignText()
+		let secondaryTitleText = titleStack.addText(secondaryLocationDescription);
+		secondaryTitleText.font = Font.thinSystemFont(12);
+		secondaryTitleText.textColor = Color.white();
+		secondaryTitleText.leftAlignText();
 	}
 
-    let sourceText = additionalInfoStack.addText("Wikipedia")
-	sourceText.font = Font.thinSystemFont(12)
-	sourceText.textColor = Color.white()
-	sourceText.rightAlignText()
+    let sourceText = additionalInfoStack.addText("Wikipedia");
+	sourceText.font = Font.thinSystemFont(12);
+	sourceText.textColor = Color.white();
+	sourceText.rightAlignText();
 
-    let lastUpdatedDate = additionalInfoStack.addDate(new Date())
-    lastUpdatedDate.applyTimeStyle()
-	lastUpdatedDate.font = Font.thinSystemFont(12)
-	lastUpdatedDate.textColor = Color.white()
-	lastUpdatedDate.rightAlignText()
+    let lastUpdatedDate = additionalInfoStack.addDate(new Date());
+    lastUpdatedDate.applyTimeStyle();
+	lastUpdatedDate.font = Font.thinSystemFont(12);
+	lastUpdatedDate.textColor = Color.white();
+	lastUpdatedDate.rightAlignText();
 
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
