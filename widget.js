@@ -65,12 +65,30 @@ function loadStoredParameters() {
 	return result;
  }
 
-function appendPerformanceDataToFile(performanceMetrics) {
+/**
+ * Attempts to write the file ./storage/name-performance-metrics.csv
+ * Returns false if it cannot be written.
+ */
+function appendPerformanceDataToFile(name, performanceMetrics) {
     let fm = FileManager.local()
 
-    let scriptName = module.filename
-    let scriptNameWithoutExtention = scriptName.replace(".js", "");
-    let metricsPath = scriptNameWithoutExtention +  '-performance-metrics.csv'
+    const thisScriptPath = module.filename
+    const storageDir = thisScriptPath.replace(fm.fileName(thisScriptPath, true), '') + "storage"
+    const metricsFilename = name + '-performance-metrics.csv';
+    const metricsPath = storageDir + "/" + metricsFilename;
+
+    if (!fm.fileExists(storageDir)) {
+        console.log("Storage folder does not exist! Creating now.");
+        fm.createDirectory(storageDir);
+    } else if (!fm.isDirectory(storageDir)) {
+        console.error("Storage folder exists but is not a directory!");
+        return false;
+    }
+
+    if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
+        console.error("Metrics file is a directory, please delete!");
+        return false;
+    }
 
     let headersAvailable = Object.getOwnPropertyNames(performanceMetrics);
 
@@ -439,7 +457,7 @@ async function run(params) {
 	} else {
 	    await clickWidget(params)
 	}
-    appendPerformanceDataToFile(performanceResultsInMillis);
+    appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
 }
 
 let params;
