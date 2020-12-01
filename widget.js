@@ -19,36 +19,36 @@ const performanceResultsInMillis = {};
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
+function getCurrentDir() {
+    const fm = FileManager.local();
+    const thisScriptPath = module.filename;
+    return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+}
+
 /**
- * Attempts to load the file ./storage/filename.json
+ * Attempts to load the file ./storage/name.json
  * Returns null if it cannot be loaded.
  */
-function loadStoredParameters() {
-    let fm = FileManager.local()
-
-    const scriptPath = module.filename
-    const storageDir = scriptPath.replace(fm.fileName(scriptPath, true), '') + "storage"
-    const parameterFile = Script.name() + ".json";
-    const parameterPath = storageDir + "/" + parameterFile;
+function loadStoredParameters(name) {
+    const fm = FileManager.local();
+    const storageDir = getCurrentDir() + "storage";
+    const parameterPath = storageDir + "/" + name + ".json";
 
     if (!fm.fileExists(storageDir)) {
         console.log("Storage folder does not exist!");
         return null;
-    }
-
-    if (fm.fileExists(storageDir) && !fm.isDirectory(storageDir)) {
+    } else if (!fm.isDirectory(storageDir)) {
         console.log("Storage folder exists but is not a directory!");
         return null;
-    }
-
-    if (!fm.fileExists(parameterPath)) {
+    } else if (!fm.fileExists(parameterPath)) {
         console.log("Parameter file does not exist!");
         return null;
+    } else if (fm.isDirectory(parameterPath)) {
+        console.log("Parameter file is a directory!");
+        return null;
     }
-    
-    const parameterString = fm.readString(parameterPath);
 
-    const parameterJSON = JSON.parse(parameterString)
+    const parameterJSON = JSON.parse(fm.readString(parameterPath));
     if (parameterJSON !== null) {
         return parameterJSON;
     } else {
@@ -57,7 +57,7 @@ function loadStoredParameters() {
     }
 }
 
- const performanceWrapper = async (fn, args) => {
+const performanceWrapper = async (fn, args) => {
 	const start = Date.now();
 	const result = await fn.apply(null, args);
 	const end = Date.now();
@@ -468,7 +468,7 @@ if (defaultParams) {
 } else  if (args.widgetParameter) {
     params = JSON.parse(args.widgetParameter);
 } else {
-    params = loadStoredParameters();
+    params = loadStoredParameters(Script.name());
 }
 
 if (params) {
