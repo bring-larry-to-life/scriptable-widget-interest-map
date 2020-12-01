@@ -368,6 +368,7 @@ async function createWidget(params)
 	const { apiKey } = params;
 	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
+// TODO: if cant load location fail
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
