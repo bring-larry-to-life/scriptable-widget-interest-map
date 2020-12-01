@@ -77,12 +77,9 @@ const performanceWrapper = async (fn, args) => {
  * Returns false if it cannot be written.
  */
 function appendPerformanceDataToFile(name, performanceMetrics) {
-    let fm = FileManager.local()
-
-    const thisScriptPath = module.filename
-    const storageDir = thisScriptPath.replace(fm.fileName(thisScriptPath, true), '') + "storage"
-    const metricsFilename = name + '-performance-metrics.csv';
-    const metricsPath = storageDir + "/" + metricsFilename;
+    const fm = FileManager.local();
+    const storageDir = getCurrentDir() + "storage";
+    const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
 
     if (!fm.fileExists(storageDir)) {
         console.log("Storage folder does not exist! Creating now.");
@@ -105,7 +102,7 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
     if (fm.fileExists(metricsPath)) {
         console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
         fileData = fm.readString(metricsPath);
-        let firstLine = getFirstLine(fileData);
+        const firstLine = getFirstLine(fileData);
         headers = firstLine.split(',');
     } else {
         console.log("File doesn't exist, using available headers.");
