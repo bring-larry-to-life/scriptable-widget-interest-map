@@ -124,6 +124,8 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 }
 
 function getFirstLine(text) {
+    // TODO: null pointer here too
+    // null is not an object
     var index = text.indexOf("\n");
     if (index === -1) index = undefined;
     return text.substring(0, index);
