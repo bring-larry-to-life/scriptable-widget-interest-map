@@ -5,10 +5,17 @@
  * titles, and quick links to Wikipedia and Google Maps directions. 
  */
 
-const defaultParams = null //{
+
+// Use true to load widget from scriptable (as opposed to the list view).
+// Can also be set in the widget parameters object.
+const debug = false;
+
+const scriptParams = null //{
 //     apiKey: 'XXX',
 //     debug: false
 // }
+
+const params = JSON.parse(args.widgetParameter) || loadStoredParameters(Script.name()) || scriptParams;
 
 // Refresh interval in hours
 const refreshInterval = 6
@@ -452,7 +459,7 @@ async function run(params) {
 	    Script.complete()
 
 	// Useful for loading widget and seeing logs manually
-	} else if (params.debug) {
+	} else if (debug || params.debug) {
 	    const widget = await createWidget(params)
 	    await widget.presentMedium()
 
@@ -460,15 +467,6 @@ async function run(params) {
 	    await clickWidget(params)
 	}
     appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
-}
-
-let params;
-if (defaultParams) {
-    params = defaultParams;
-} else  if (args.widgetParameter) {
-    params = JSON.parse(args.widgetParameter);
-} else {
-    params = loadStoredParameters(Script.name());
 }
 
 if (params) {
