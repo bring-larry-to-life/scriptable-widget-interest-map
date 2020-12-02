@@ -3,6 +3,21 @@
 ![A medium-sized widget view of Boston Common.](media/3DFC39F6-962E-4255-9337-DBAD908AAAC6.jpeg?raw=true)  |  ![A medium-sized widget view of Spot Pond.](media/C9BF6F28-93CC-4F8F-A848-58FD1CDB901B.png?raw=true)
 | --- | --- |
 
+## Quickstart
+
+1. [Get an API key from Google.](https://developers.google.com/maps/documentation/javascript/get-api-key)
+2. [Download the Scriptable App for iOS.](https://scriptable.app/)
+3. [Copy and paste widget.js into a new script on the Scriptable app.](https://raw.githubusercontent.com/bring-larry-to-life/scriptable-widget-interest-map/main/widget.js)
+4. [Edit the script params section at the top of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
+```
+const scriptParams = {
+    apiKey: 'XXX',
+    debug: false
+}
+```
+5. Create a new Scriptable widget on your home screen and edit it to use the script you downloaded.
+6. Enjoy!
+
 ## Performance Metrics
 Performance metrics are stored in a CSV file and can be read easily using the "Charty" app with this shortcut:
 
