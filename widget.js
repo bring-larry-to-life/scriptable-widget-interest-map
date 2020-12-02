@@ -26,6 +26,68 @@ const performanceResultsInMillis = {};
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
+// Get user's current latitude and longitude
+const getCurrentLocation = async() => {
+	await Location.setAccuracyToHundredMeters();
+	return Location.current().then((res) => {
+		return {
+			'latitude': res.latitude,
+			'longitude': res.longitude
+		};
+	}, err => console.error(`Could not get current location: ${err}`));
+};
+
+/*
+ * Given coordinates, return a description of the current location in words (town name, etc.).
+ * Object returned has two properties:
+ * {
+ *   "areaOfInterest": "Spot Pond - Middlesex Fells Reservation",
+ *   "generalArea": "Medford, MA"
+ * }
+ *
+ * More information here: https://github.com/stanleyrya/scriptable-playground/blob/main/reverse-geocode-tests.js
+ */
+const getLocationDescription = async(lat, long) => {
+	return Location.reverseGeocode(lat, long).then((res) => {
+		const response = res[0];
+
+		let areaOfInterest = "";
+		if (response.inlandWater) {
+			areaOfInterest += response.inlandWater
+		} else if (response.ocean) {
+			areaOfInterest += response.ocean;
+		}
+		if (areaOfInterest && response.areasOfInterest) {
+			areaOfInterest += ' - ';
+		}
+		if (response.areasOfInterest) {
+			// To keep it simple, just grab the first one.
+			areaOfInterest += response.areasOfInterest[0];
+		}
+
+		let generalArea = "";
+		if (response.locality) {
+			generalArea += response.locality;
+		}
+		if (generalArea && response.administrativeArea) {
+			generalArea += ', ';
+		}
+		if (response.administrativeArea) {
+			generalArea += response.administrativeArea;
+		}
+
+		return {
+			areaOfInterest: areaOfInterest ? areaOfInterest : null,
+			generalArea: generalArea ? generalArea : null
+		};
+	}, err => console.log(`Could not reverse geocode location: ${err}`));
+};
+
+// Utility function to increment alphabetically for map markers
+const nextChar = (c) => {
+	return String.fromCharCode(c.charCodeAt(0) + 1);
+}
+
 function getFileManager() {
 	try {
 		return FileManager.iCloud();
@@ -41,7 +103,7 @@ function getCurrentDir() {
 }
 
 /**
- * Attempts to load the file ./storage/name.json
+ * Attempts to load parameters stored in the file ./storage/name.json
  * Returns null if it cannot be loaded.
  */
 function loadStoredParameters(name) {
@@ -75,6 +137,20 @@ function loadStoredParameters(name) {
 	}
 }
 
+/*******************************
+ **** PERFORMANCE FUNCTIONS ****
+ *******************************/
+
+/**
+ * Times a function's execution in milliseconds and stores the results in the performanceResultsInMillis object.
+ *
+ * Here are two examples on how to use it, one without parameters and one with:
+ * let currLocation = await performanceWrapper(getCurrentLocation);
+ * let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+ *
+ * Here's an example of what the performanceResultsInMillis would look like after those two function calls:
+ * { "getCurrentLocation": 3200, "getNearbyWikiArticles": 312 }
+ */
 const performanceWrapper = async(fn, args) => {
 	const start = Date.now();
 	const result = await fn.apply(null, args);
@@ -84,8 +160,13 @@ const performanceWrapper = async(fn, args) => {
 }
 
 /**
- * Attempts to write the file ./storage/name-performance-metrics.csv
+ * Attempts to write the performanceResultsInMillis object to the file ./storage/name-performance-metrics.csv
  * Returns false if it cannot be written.
+ *
+ * Example output looks like this:
+ * getCurrentLocation, getNearbyWikiArticles
+ * 3200, 312
+ * 450, 300
  */
 function appendPerformanceDataToFile(name, performanceMetrics) {
 	const fm = getFileManager();
@@ -142,66 +223,6 @@ function getFirstLine(text) {
 	var index = text.indexOf("\n");
 	if (index === -1) index = undefined;
 	return text.substring(0, index);
-}
-
-// Get user's current latitude and longitude
-const getCurrentLocation = async() => {
-	await Location.setAccuracyToHundredMeters();
-	return Location.current().then((res) => {
-		return {
-			'latitude': res.latitude,
-			'longitude': res.longitude
-		};
-	}, err => console.error(`Could not get current location: ${err}`));
-};
-
-// Given coordinates, return a description of the current location in words (town name, etc.).
-// Object returned has two properties:
-// {
-//   "areaOfInterest": "Spot Pond - Middlesex Fells Reservation",
-//   "generalArea": "Medford, MA"
-// }
-//
-// More information here: https://github.com/stanleyrya/scriptable-playground/blob/main/reverse-geocode-tests.js
-const getLocationDescription = async(lat, long) => {
-	return Location.reverseGeocode(lat, long).then((res) => {
-		const response = res[0];
-
-		let areaOfInterest = "";
-		if (response.inlandWater) {
-			areaOfInterest += response.inlandWater
-		} else if (response.ocean) {
-			areaOfInterest += response.ocean;
-		}
-		if (areaOfInterest && response.areasOfInterest) {
-			areaOfInterest += ' - ';
-		}
-		if (response.areasOfInterest) {
-			// To keep it simple, just grab the first one.
-			areaOfInterest += response.areasOfInterest[0];
-		}
-
-		let generalArea = "";
-		if (response.locality) {
-			generalArea += response.locality;
-		}
-		if (generalArea && response.administrativeArea) {
-			generalArea += ', ';
-		}
-		if (response.administrativeArea) {
-			generalArea += response.administrativeArea;
-		}
-
-		return {
-			areaOfInterest: areaOfInterest ? areaOfInterest : null,
-			generalArea: generalArea ? generalArea : null
-		};
-	}, err => console.log(`Could not reverse geocode location: ${err}`));
-};
-
-// Utility function to increment alphabetically for map markers
-const nextChar = (c) => {
-	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
 
 /*******************************
@@ -269,21 +290,17 @@ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers
 }
 
 // Returns Google Maps directions direct link from current location to point of interest
-const getDirectionsUrl = (currLocation, destination) => {
-	return `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
-}
+const getDirectionsUrl = (currLocation, destination) => `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
 
 // Returns Google Maps direct link for point of interest
-const getCoordsUrl = (destination) => {
-	return `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
-}
+const getCoordsUrl = (destination) => `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
 
 /*******************************
  ***** WIKIPEDIA FUNCTIONS *****
  *******************************/
 
 const getWikiUrlByPageId = (pageId) => `https://en.wikipedia.org/?curid=${pageId}`;
-const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates|pageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`
+const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates|pageimages&generator=geosearch&ggscoord=${lat}|${lng}&ggsradius=10000`;
 
 /*
  * Calls wikipedia for nearby articles and modifies the object for ease of use.
@@ -334,7 +351,7 @@ async function getNearbyWikiArticles(lat, lng) {
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch (e) {
-		console.error(e)
+		console.error(e);
 		return null;
 	}
 }
@@ -356,7 +373,7 @@ const createTable = (currLocation, map, items) => {
 		console.log('ITEM');
 		console.log(item);
 		const row = new UITableRow();
-		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`
+		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`;
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
 		const title = item.title;
 		const markerCell = row.addButton(label);
@@ -376,29 +393,27 @@ const createTable = (currLocation, map, items) => {
 	return table;
 }
 
-/*
- * Returns an instance of ListWidget that contains the contents of this widget.
- * The widget returned consists of a background image, a greyscaled gradient and
- * the image title in the slightly darker part of the grandient in the lower
- * left corner of the widget.
- */
 async function createWidget(params) {
 	const { apiKey } = params;
 	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
-	// TODO: if cant load location fail
+	if (!currLocation) {
+		// There's a weird error where current location can't be retrieved and it fails.
+		// Until we write a way to store the failure in a file, let's at least try again.
+		currLocation = await performanceWrapper(getCurrentLocation);
+	}
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = image;
 
-	let startColor = new Color("#1c1c1c00")
-	let endColor = new Color("#1c1c1cb4")
-	let gradient = new LinearGradient()
-	gradient.colors = [startColor, endColor]
-	gradient.locations = [0.25, 1]
-	widget.backgroundGradient = gradient
-	widget.backgroundColor = new Color("1c1c1c")
+	let startColor = new Color("#1c1c1c00");
+	let endColor = new Color("#1c1c1cb4");
+	let gradient = new LinearGradient();
+	gradient.colors = [startColor, endColor];
+	gradient.locations = [0.25, 1];
+	widget.backgroundGradient = gradient;
+	widget.backgroundColor = new Color("1c1c1c");
 
 	let textStack = widget.addStack();
 	textStack.layoutHorizontally();
@@ -407,14 +422,14 @@ async function createWidget(params) {
 	let titleStack = textStack.addStack();
 	titleStack.layoutVertically();
 	titleStack.bottomAlignContent();
-	titleStack.addSpacer()
+	titleStack.addSpacer();
 
-	textStack.addSpacer()
+	textStack.addSpacer();
 
 	let additionalInfoStack = textStack.addStack();
 	additionalInfoStack.layoutVertically();
 	additionalInfoStack.bottomAlignContent();
-	additionalInfoStack.addSpacer()
+	additionalInfoStack.addSpacer();
 
 	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
 	let primaryLocationDescription;
@@ -447,20 +462,15 @@ async function createWidget(params) {
 	lastUpdatedDate.textColor = Color.white();
 	lastUpdatedDate.rightAlignText();
 
-	let interval = 1000 * 60 * 60 * refreshInterval
-	widget.refreshAfterDate = new Date(Date.now() + interval)
+	let interval = 1000 * 60 * 60 * refreshInterval;
+	widget.refreshAfterDate = new Date(Date.now() + interval);
 
-	return widget
+	return widget;
 }
 
 async function clickWidget(params) {
 	const { apiKey } = params;
 	let currLocation = await performanceWrapper(getCurrentLocation);
-	if (!currLocation) {
-		// There's a weird error where current location can't be retrieved and it fails.
-		// Until we write a way to store the failure in a file, let's at least try again.
-		currLocation = await performanceWrapper(getCurrentLocation);
-	}
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	const table = createTable(currLocation, image, wikiArticles);
@@ -470,24 +480,24 @@ async function clickWidget(params) {
 
 async function run(params) {
 	if (config.runsInWidget) {
-		const widget = await createWidget(params)
-		Script.setWidget(widget)
-		Script.complete()
+		const widget = await createWidget(params);
+		Script.setWidget(widget);
+		Script.complete();
 
-		// Useful for loading widget and seeing logs manually
 	} else if (debug || params.debug) {
-		const widget = await createWidget(params)
-		await widget.presentMedium()
+		// Useful for loading widget and seeing logs manually
+		const widget = await createWidget(params);
+		await widget.presentMedium();
 
 	} else {
-		await clickWidget(params)
+		await clickWidget(params);
 	}
 	appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
 }
 
 if (params) {
-	console.log("Using params: " + JSON.stringify(params))
+	console.log("Using params: " + JSON.stringify(params));
 	await run(params);
 } else {
-	console.log("No valid parameters!")
+	console.log("No valid parameters!");
 }
