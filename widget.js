@@ -1,8 +1,8 @@
 /*
  * Authors: Ryan Stanley (stanleyrya@gmail.com), Jason Morse (jasonkylemorse@gmail.com)
- * Description: Scriptable code to display Google Maps image widget with nearby points of 
+ * Description: Scriptable code to display Google Maps image widget with nearby points of
  * interest, sourced from Wikipedia. Clicking on the map opens a list of locations with photos,
- * titles, and quick links to Wikipedia and Google Maps directions. 
+ * titles, and quick links to Wikipedia and Google Maps directions.
  */
 
 
@@ -27,17 +27,17 @@ const performanceResultsInMillis = {};
  *******************************/
 
 function getFileManager() {
-    try {
-        return FileManager.iCloud();
-    } catch(e) {
-        return FileManager.local();
-    }
+	try {
+		return FileManager.iCloud();
+	} catch (e) {
+		return FileManager.local();
+	}
 }
 
 function getCurrentDir() {
-    const fm = getFileManager();
-    const thisScriptPath = module.filename;
-    return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	const fm = getFileManager();
+	const thisScriptPath = module.filename;
+	return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
 }
 
 /**
@@ -45,112 +45,112 @@ function getCurrentDir() {
  * Returns null if it cannot be loaded.
  */
 function loadStoredParameters(name) {
-    const fm = getFileManager();
-    const storageDir = getCurrentDir() + "storage";
-    const parameterPath = storageDir + "/" + name + ".json";
+	const fm = getFileManager();
+	const storageDir = getCurrentDir() + "storage";
+	const parameterPath = storageDir + "/" + name + ".json";
 
-    if (!fm.fileExists(storageDir)) {
-        console.log("Storage folder does not exist!");
-        return null;
-    } else if (!fm.isDirectory(storageDir)) {
-        console.log("Storage folder exists but is not a directory!");
-        return null;
-    } else if (!fm.fileExists(parameterPath)) {
-        console.log("Parameter file does not exist!");
-        return null;
-    } else if (fm.isDirectory(parameterPath)) {
-        console.log("Parameter file is a directory!");
-        return null;
-    }
+	if (!fm.fileExists(storageDir)) {
+		console.log("Storage folder does not exist!");
+		return null;
+	} else if (!fm.isDirectory(storageDir)) {
+		console.log("Storage folder exists but is not a directory!");
+		return null;
+	} else if (!fm.fileExists(parameterPath)) {
+		console.log("Parameter file does not exist!");
+		return null;
+	} else if (fm.isDirectory(parameterPath)) {
+		console.log("Parameter file is a directory!");
+		return null;
+	}
 
-    // Doesn't fail with local filesystem
-    fm.downloadFileFromiCloud(parameterPath);
+	// Doesn't fail with local filesystem
+	fm.downloadFileFromiCloud(parameterPath);
 
-    const parameterJSON = JSON.parse(fm.readString(parameterPath));
-    if (parameterJSON !== null) {
-        return parameterJSON;
-    } else {
-        console.log("Could not load parameter file as JSON!");
-        return null;
-    }
+	const parameterJSON = JSON.parse(fm.readString(parameterPath));
+	if (parameterJSON !== null) {
+		return parameterJSON;
+	} else {
+		console.log("Could not load parameter file as JSON!");
+		return null;
+	}
 }
 
-const performanceWrapper = async (fn, args) => {
+const performanceWrapper = async(fn, args) => {
 	const start = Date.now();
 	const result = await fn.apply(null, args);
 	const end = Date.now();
 	performanceResultsInMillis[fn.name] = (end - start);
 	return result;
- }
+}
 
 /**
  * Attempts to write the file ./storage/name-performance-metrics.csv
  * Returns false if it cannot be written.
  */
 function appendPerformanceDataToFile(name, performanceMetrics) {
-    const fm = getFileManager();
-    const storageDir = getCurrentDir() + "storage";
-    const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
+	const fm = getFileManager();
+	const storageDir = getCurrentDir() + "storage";
+	const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
 
-    if (!fm.fileExists(storageDir)) {
-        console.log("Storage folder does not exist! Creating now.");
-        fm.createDirectory(storageDir);
-    } else if (!fm.isDirectory(storageDir)) {
-        console.error("Storage folder exists but is not a directory!");
-        return false;
-    }
+	if (!fm.fileExists(storageDir)) {
+		console.log("Storage folder does not exist! Creating now.");
+		fm.createDirectory(storageDir);
+	} else if (!fm.isDirectory(storageDir)) {
+		console.error("Storage folder exists but is not a directory!");
+		return false;
+	}
 
-    if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
-        console.error("Metrics file is a directory, please delete!");
-        return false;
-    }
+	if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
+		console.error("Metrics file is a directory, please delete!");
+		return false;
+	}
 
-    let headersAvailable = Object.getOwnPropertyNames(performanceMetrics);
+	let headersAvailable = Object.getOwnPropertyNames(performanceMetrics);
 
-    let headers;
-    let fileData;
+	let headers;
+	let fileData;
 
-    if (fm.fileExists(metricsPath)) {
-        console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+	if (fm.fileExists(metricsPath)) {
+		console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
 
-         // Doesn't fail with local filesystem
-        fm.downloadFileFromiCloud(metricsPath);
+		// Doesn't fail with local filesystem
+		fm.downloadFileFromiCloud(metricsPath);
 
-        fileData = fm.readString(metricsPath);
-        const firstLine = getFirstLine(fileData);
-        headers = firstLine.split(',');
-    } else {
-        console.log("File doesn't exist, using available headers.");
-        headers = headersAvailable;
-        fileData = headers.toString();
-    }
+		fileData = fm.readString(metricsPath);
+		const firstLine = getFirstLine(fileData);
+		headers = firstLine.split(',');
+	} else {
+		console.log("File doesn't exist, using available headers.");
+		headers = headersAvailable;
+		fileData = headers.toString();
+	}
 
-    // Append the data if it exists for the available headers
-    fileData = fileData.concat("\n");
-    for (const header of headers) {
-        if (performanceMetrics[header]) {
-            fileData = fileData.concat(performanceMetrics[header]);
-        }
-        fileData = fileData.concat(",");
-    }
-    fileData = fileData.slice(0, -1);
+	// Append the data if it exists for the available headers
+	fileData = fileData.concat("\n");
+	for (const header of headers) {
+		if (performanceMetrics[header]) {
+			fileData = fileData.concat(performanceMetrics[header]);
+		}
+		fileData = fileData.concat(",");
+	}
+	fileData = fileData.slice(0, -1);
 
-    fm.writeString(metricsPath, fileData);
+	fm.writeString(metricsPath, fileData);
 }
 
 function getFirstLine(text) {
-    var index = text.indexOf("\n");
-    if (index === -1) index = undefined;
-    return text.substring(0, index);
+	var index = text.indexOf("\n");
+	if (index === -1) index = undefined;
+	return text.substring(0, index);
 }
 
 // Get user's current latitude and longitude
-const getCurrentLocation = async () => {
+const getCurrentLocation = async() => {
 	await Location.setAccuracyToHundredMeters();
-	return Location.current().then((res) => { 
+	return Location.current().then((res) => {
 		return {
-			'latitude': res.latitude, 
-			'longitude': res.longitude 
+			'latitude': res.latitude,
+			'longitude': res.longitude
 		};
 	}, err => console.error(`Could not get current location: ${err}`));
 };
@@ -161,9 +161,9 @@ const getCurrentLocation = async () => {
 //   "areaOfInterest": "Spot Pond - Middlesex Fells Reservation",
 //   "generalArea": "Medford, MA"
 // }
-// 
+//
 // More information here: https://github.com/stanleyrya/scriptable-playground/blob/main/reverse-geocode-tests.js
-const getLocationDescription = async (lat, long) => {
+const getLocationDescription = async(lat, long) => {
 	return Location.reverseGeocode(lat, long).then((res) => {
 		const response = res[0];
 
@@ -201,7 +201,7 @@ const getLocationDescription = async (lat, long) => {
 
 // Utility function to increment alphabetically for map markers
 const nextChar = (c) => {
-    return String.fromCharCode(c.charCodeAt(0) + 1);
+	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
 
 /*******************************
@@ -216,18 +216,18 @@ const googleMapsBaseUri = 'https://maps.googleapis.com/maps/api/staticmap';
  * Returns the size for a square by default.
  */
 const getMapSize = (widgetSize) => {
-    if (widgetSize === 'medium') {
-        return '800x500'
-    } else {
-        return '800x800'
-    }
+	if (widgetSize === 'medium') {
+		return '800x500'
+	} else {
+		return '800x800'
+	}
 }
 
 // Construct Google Maps API URI given city input
 const getMapUrlByCity = (apiKey, city, zoom = '14') => `${googleMapsBaseUri}?center=${city}&zoom=${zoom}&size=${size}&key=${apiKey}`;
 
 // Construct Google Maps API URI given user latitude, longitude, and list of markers
-const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers=[], zoom = '14', size='800x800') => {
+const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers = [], zoom = '14', size = '800x800') => {
 	const center = `${userLat},${userLng}`;
 	if (markers.length >= 1) {
 		let label = '@';
@@ -248,21 +248,21 @@ async function getMapsPicByCity(apiKey, city) {
 		const mapPicRequest = new Request(encodeURI(getMapUrlByCity(apiKey, city)));
 		const mapPic = await mapPicRequest.loadImage();
 		return { image: mapPic, title: city };
-	} catch(e) {
+	} catch (e) {
 		console.error(e)
 		return null;
 	}
 }
 
 // Returns object containing static Google Maps image response (by specific location & markers)
- async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
+async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
 	try {
 		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
 		console.log('Request URI');
 		console.log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
 		return await mapPicRequest.loadImage();
-	} catch(e) {
+	} catch (e) {
 		console.error(e)
 		return null;
 	}
@@ -275,7 +275,7 @@ const getDirectionsUrl = (currLocation, destination) => {
 
 // Returns Google Maps direct link for point of interest
 const getCoordsUrl = (destination) => {
-    return `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
+	return `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
 }
 
 /*******************************
@@ -290,16 +290,16 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
  *
  * Example Wikipedia API:
  * https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates%7Cpageimages&generator=geosearch&ggscoord=41.68365535753726|-70.19823287890266&ggsradius=10000
- * 
+ *
  * Useful Wikipedia article on how to use API with location and images:
  * https://www.mediawiki.org/wiki/API:Geosearch#Example_3:_Search_for_pages_nearby_with_images
  *
  * Useful StackOverflow article about using Wikipedia API with location and images:
  * https://stackoverflow.com/questions/24529853/how-to-get-more-info-within-only-one-geosearch-call-via-wikipedia-api
- * 
+ *
  * Example output from Wikipedia:
  * {"batchcomplete":"","query":{"pages":{"38743":{"pageid":38743,"ns":0,"title":"Cape Cod","index":-1,"coordinates":[{"lat":41.68,"lon":-70.2,"primary":"","globe":"earth"}],"thumbnail":{"source":"https://upload.wikimedia.org/wikipedia/en/thumb/1/12/Ccnatsea.jpg/50px-Ccnatsea.jpg","width":50,"height":34},"pageimage":"Ccnatsea.jpg"}}}}
- * 
+ *
  * Example output: [{
  *   lat: 41.68
  *   lng: -70.2
@@ -328,12 +328,12 @@ async function getNearbyWikiArticles(lat, lng) {
 			"title": article.title,
 			"lng": article.coordinates[0].lon,
 			"lat": article.coordinates[0].lat,
-            "thumbnail": article.thumbnail
+			"thumbnail": article.thumbnail
 		}));
 
 		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
-	} catch(e) {
+	} catch (e) {
 		console.error(e)
 		return null;
 	}
@@ -379,21 +379,20 @@ const createTable = (currLocation, map, items) => {
 /*
  * Returns an instance of ListWidget that contains the contents of this widget.
  * The widget returned consists of a background image, a greyscaled gradient and
- * the image title in the slightly darker part of the grandient in the lower 
+ * the image title in the slightly darker part of the grandient in the lower
  * left corner of the widget.
  */
-async function createWidget(params)
-{
+async function createWidget(params) {
 	const { apiKey } = params;
 	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
-// TODO: if cant load location fail
+	// TODO: if cant load location fail
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = image;
 
-    let startColor = new Color("#1c1c1c00")
+	let startColor = new Color("#1c1c1c00")
 	let endColor = new Color("#1c1c1cb4")
 	let gradient = new LinearGradient()
 	gradient.colors = [startColor, endColor]
@@ -401,21 +400,21 @@ async function createWidget(params)
 	widget.backgroundGradient = gradient
 	widget.backgroundColor = new Color("1c1c1c")
 
-    let textStack = widget.addStack();
-    textStack.layoutHorizontally();
-    textStack.bottomAlignContent();
+	let textStack = widget.addStack();
+	textStack.layoutHorizontally();
+	textStack.bottomAlignContent();
 
-    let titleStack = textStack.addStack();
-    titleStack.layoutVertically();
-    titleStack.bottomAlignContent();
-    titleStack.addSpacer()
-    
-    textStack.addSpacer()
+	let titleStack = textStack.addStack();
+	titleStack.layoutVertically();
+	titleStack.bottomAlignContent();
+	titleStack.addSpacer()
 
-    let additionalInfoStack = textStack.addStack();
-    additionalInfoStack.layoutVertically();
-    additionalInfoStack.bottomAlignContent();
-    additionalInfoStack.addSpacer()
+	textStack.addSpacer()
+
+	let additionalInfoStack = textStack.addStack();
+	additionalInfoStack.layoutVertically();
+	additionalInfoStack.bottomAlignContent();
+	additionalInfoStack.addSpacer()
 
 	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
 	let primaryLocationDescription;
@@ -428,8 +427,8 @@ async function createWidget(params)
 	}
 
 	let primaryTitleText = titleStack.addText(primaryLocationDescription);
-    primaryTitleText.leftAlignText();
-    primaryTitleText.textColor = Color.white();
+	primaryTitleText.leftAlignText();
+	primaryTitleText.textColor = Color.white();
 	if (secondaryLocationDescription) {
 		let secondaryTitleText = titleStack.addText(secondaryLocationDescription);
 		secondaryTitleText.font = Font.thinSystemFont(12);
@@ -437,31 +436,31 @@ async function createWidget(params)
 		secondaryTitleText.leftAlignText();
 	}
 
-    let sourceText = additionalInfoStack.addText("Wikipedia");
+	let sourceText = additionalInfoStack.addText("Wikipedia");
 	sourceText.font = Font.thinSystemFont(12);
 	sourceText.textColor = Color.white();
 	sourceText.rightAlignText();
 
-    let lastUpdatedDate = additionalInfoStack.addDate(new Date());
-    lastUpdatedDate.applyTimeStyle();
+	let lastUpdatedDate = additionalInfoStack.addDate(new Date());
+	lastUpdatedDate.applyTimeStyle();
 	lastUpdatedDate.font = Font.thinSystemFont(12);
 	lastUpdatedDate.textColor = Color.white();
 	lastUpdatedDate.rightAlignText();
 
 	let interval = 1000 * 60 * 60 * refreshInterval
 	widget.refreshAfterDate = new Date(Date.now() + interval)
-	
+
 	return widget
 }
 
 async function clickWidget(params) {
 	const { apiKey } = params;
 	let currLocation = await performanceWrapper(getCurrentLocation);
-    if (!currLocation) {
-        // There's a weird error where current location can't be retrieved and it fails.
-        // Until we write a way to store the failure in a file, let's at least try again.
-        currLocation = await performanceWrapper(getCurrentLocation);
-    }
+	if (!currLocation) {
+		// There's a weird error where current location can't be retrieved and it fails.
+		// Until we write a way to store the failure in a file, let's at least try again.
+		currLocation = await performanceWrapper(getCurrentLocation);
+	}
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	const table = createTable(currLocation, image, wikiArticles);
@@ -471,24 +470,24 @@ async function clickWidget(params) {
 
 async function run(params) {
 	if (config.runsInWidget) {
-	    const widget = await createWidget(params)
-	    Script.setWidget(widget)
-	    Script.complete()
+		const widget = await createWidget(params)
+		Script.setWidget(widget)
+		Script.complete()
 
-	// Useful for loading widget and seeing logs manually
+		// Useful for loading widget and seeing logs manually
 	} else if (debug || params.debug) {
-	    const widget = await createWidget(params)
-	    await widget.presentMedium()
+		const widget = await createWidget(params)
+		await widget.presentMedium()
 
 	} else {
-	    await clickWidget(params)
+		await clickWidget(params)
 	}
-    appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
+	appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
 }
 
 if (params) {
-    console.log("Using params: " + JSON.stringify(params))
+	console.log("Using params: " + JSON.stringify(params))
 	await run(params);
 } else {
-    console.log("No valid parameters!")
+	console.log("No valid parameters!")
 }
