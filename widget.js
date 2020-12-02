@@ -26,8 +26,16 @@ const performanceResultsInMillis = {};
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
+function getFileManager() {
+    try {
+        return FileManager.iCloud();
+    } catch(e) {
+        return FileManager.local();
+    }
+}
+
 function getCurrentDir() {
-    const fm = FileManager.local();
+    const fm = getFileManager();
     const thisScriptPath = module.filename;
     return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
 }
@@ -37,13 +45,7 @@ function getCurrentDir() {
  * Returns null if it cannot be loaded.
  */
 function loadStoredParameters(name) {
-    let fm;
-    try {
-        fm = FileManager.iCloud();
-    } catch(e) {
-        fm = FileManager.local();
-    }
-
+    const fm = getFileManager();
     const storageDir = getCurrentDir() + "storage";
     const parameterPath = storageDir + "/" + name + ".json";
 
@@ -86,13 +88,7 @@ const performanceWrapper = async (fn, args) => {
  * Returns false if it cannot be written.
  */
 function appendPerformanceDataToFile(name, performanceMetrics) {
-    let fm;
-    try {
-        fm = FileManager.iCloud();
-    } catch(e) {
-        fm = FileManager.local();
-    }
-
+    const fm = getFileManager();
     const storageDir = getCurrentDir() + "storage";
     const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
 
@@ -459,17 +455,17 @@ async function createWidget(params)
 }
 
 async function clickWidget(params) {
-    const { apiKey } = params;
-    let currLocation = await performanceWrapper(getCurrentLocation);
+	const { apiKey } = params;
+	let currLocation = await performanceWrapper(getCurrentLocation);
     if (!currLocation) {
         // There's a weird error where current location can't be retrieved and it fails.
         // Until we write a way to store the failure in a file, let's at least try again.
         currLocation = await performanceWrapper(getCurrentLocation);
     }
-    let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-    let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-    const table = createTable(currLocation, image, wikiArticles);
-    await QuickLook.present(table);
+	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	const table = createTable(currLocation, image, wikiArticles);
+	await QuickLook.present(table);
 }
 
 
