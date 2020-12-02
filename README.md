@@ -8,6 +8,8 @@ Performance metrics are stored in a CSV file and can be read easily using the "C
 
 https://www.icloud.com/shortcuts/932366757e124075ae6f755da89563eb
 
+If you're feeling lazy you can also just look at the CSV file directly or even play with it in Excell and Google Sheets.
+
 |  Performance Graph   |   Investigation  |
 | --- | --- |
 | ![A graph depicting getCurrentLocation taking much longer than the other APIs](media/BB6E2934-E843-4F2F-9668-3C4890FA22DD.png?raw=true "getCurrentLocation Latency with 10 meter accuracy") | In this graph we noticed that getCurrentLocation with 10 meter accuracy would occasionally take a long time to execute. This was surprising because other apps seem to get the current location quickly and the latency is inconsistent. |
