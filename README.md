@@ -1,9 +1,9 @@
 # scriptable-widget-interest-map
 
+![A medium-sized widget view of Boston Common.](media/3DFC39F6-962E-4255-9337-DBAD908AAAC6.jpeg?raw=true)  |  ![A medium-sized widget view of Spot Pond.](media/C9BF6F28-93CC-4F8F-A848-58FD1CDB901B.png?raw=true)
+| --- | --- |
 
-![A medium-sized widget view of Boston Common.](media/3DFC39F6-962E-4255-9337-DBAD908AAAC6.jpeg?raw=true)
 
-![A medium-sized widget view of Spot Pond.](media/C9BF6F28-93CC-4F8F-A848-58FD1CDB901B.png?raw=true)
 
 ## Performance Metrics
 Performance metrics are stored in a CSV file and can be read easily using the "Charty" app with this shortcut:
