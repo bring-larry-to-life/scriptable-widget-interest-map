@@ -37,7 +37,13 @@ function getCurrentDir() {
  * Returns null if it cannot be loaded.
  */
 function loadStoredParameters(name) {
-    const fm = FileManager.local();
+    let fm;
+    try {
+        fm = FileManager.iCloud();
+    } catch(e) {
+        fm = FileManager.local();
+    }
+
     const storageDir = getCurrentDir() + "storage";
     const parameterPath = storageDir + "/" + name + ".json";
 
@@ -54,6 +60,9 @@ function loadStoredParameters(name) {
         console.log("Parameter file is a directory!");
         return null;
     }
+
+    // Doesn't fail with local filesystem
+    fm.downloadFileFromiCloud(parameterPath);
 
     const parameterJSON = JSON.parse(fm.readString(parameterPath));
     if (parameterJSON !== null) {
@@ -77,7 +86,13 @@ const performanceWrapper = async (fn, args) => {
  * Returns false if it cannot be written.
  */
 function appendPerformanceDataToFile(name, performanceMetrics) {
-    const fm = FileManager.local();
+    let fm;
+    try {
+        fm = FileManager.iCloud();
+    } catch(e) {
+        fm = FileManager.local();
+    }
+
     const storageDir = getCurrentDir() + "storage";
     const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
 
@@ -101,6 +116,10 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 
     if (fm.fileExists(metricsPath)) {
         console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+
+         // Doesn't fail with local filesystem
+        fm.downloadFileFromiCloud(metricsPath);
+
         fileData = fm.readString(metricsPath);
         const firstLine = getFirstLine(fileData);
         headers = firstLine.split(',');
@@ -124,9 +143,6 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 }
 
 function getFirstLine(text) {
-    // TODO: null pointer here too
-    // null is not an object
-    // iCloud!
     var index = text.indexOf("\n");
     if (index === -1) index = undefined;
     return text.substring(0, index);
@@ -140,7 +156,7 @@ const getCurrentLocation = async () => {
 			'latitude': res.latitude, 
 			'longitude': res.longitude 
 		};
-	}, err => console.log(`Could not get current location: ${err}`));
+	}, err => console.error(`Could not get current location: ${err}`));
 };
 
 // Given coordinates, return a description of the current location in words (town name, etc.).
@@ -443,12 +459,17 @@ async function createWidget(params)
 }
 
 async function clickWidget(params) {
-	const { apiKey } = params;
-	let currLocation = await performanceWrapper(getCurrentLocation);
-	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-	const table = createTable(currLocation, image, wikiArticles);
-	await QuickLook.present(table);
+    const { apiKey } = params;
+    let currLocation = await performanceWrapper(getCurrentLocation);
+    if (!currLocation) {
+        // There's a weird error where current location can't be retrieved and it fails.
+        // Until we write a way to store the failure in a file, let's at least try again.
+        currLocation = await performanceWrapper(getCurrentLocation);
+    }
+    let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+    let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+    const table = createTable(currLocation, image, wikiArticles);
+    await QuickLook.present(table);
 }
 
 
