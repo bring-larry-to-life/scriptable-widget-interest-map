@@ -397,11 +397,6 @@ async function createWidget(params) {
 	const { apiKey } = params;
 	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
-	if (!currLocation) {
-		// There's a weird error where current location can't be retrieved and it fails.
-		// Until we write a way to store the failure in a file, let's at least try again.
-		currLocation = await performanceWrapper(getCurrentLocation);
-	}
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
