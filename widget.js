@@ -24,6 +24,7 @@ const params = JSON.parse(args.widgetParameter) || loadStoredParameters(Script.n
 // Refresh interval in hours
 const refreshInterval = 6
 
+let logs = "";
 const performanceResultsInMillis = {};
 
 /*******************************
@@ -84,7 +85,7 @@ const getLocationDescription = async(lat, long) => {
 			areaOfInterest: areaOfInterest ? areaOfInterest : null,
 			generalArea: generalArea ? generalArea : null
 		};
-	}, err => console.log(`Could not reverse geocode location: ${err}`));
+	}, err => log(`Could not reverse geocode location: ${err}`));
 };
 
 // Utility function to increment alphabetically for map markers
@@ -116,16 +117,16 @@ function loadStoredParameters(name) {
 	const parameterPath = storageDir + "/" + name + ".json";
 
 	if (!fm.fileExists(storageDir)) {
-		console.log("Storage folder does not exist!");
+		log("Storage folder does not exist!");
 		return null;
 	} else if (!fm.isDirectory(storageDir)) {
-		console.log("Storage folder exists but is not a directory!");
+		log("Storage folder exists but is not a directory!");
 		return null;
 	} else if (!fm.fileExists(parameterPath)) {
-		console.log("Parameter file does not exist!");
+		log("Parameter file does not exist!");
 		return null;
 	} else if (fm.isDirectory(parameterPath)) {
-		console.log("Parameter file is a directory!");
+		log("Parameter file is a directory!");
 		return null;
 	}
 
@@ -136,9 +137,40 @@ function loadStoredParameters(name) {
 	if (parameterJSON !== null) {
 		return parameterJSON;
 	} else {
-		console.log("Could not load parameter file as JSON!");
+		log("Could not load parameter file as JSON!");
 		return null;
 	}
+}
+
+function log(line) {
+  if (line instanceof Error) {
+    console.error(line);
+  } else {
+    console.log(line);
+  }
+  logs += new Date() + " - " + line + "\n";
+}
+
+/**
+ * Attempts to write logs to the file ./storage/name-logs.txt
+ */
+function writeLogs(name, logs) {
+    const fm = getFileManager();
+    const storageDir = getCurrentDir() + "storage";
+    const logPath = storageDir + "/" + name + "-logs.txt";
+
+    if (!fm.fileExists(storageDir)) {
+        log("Storage folder does not exist! Creating now.");
+        fm.createDirectory(storageDir);
+    } else if (!fm.isDirectory(storageDir)) {
+        throw ("Storage folder exists but is not a directory!");
+    }
+
+    if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
+        throw ("Log file is a directory, please delete!");
+    }
+
+    fm.writeString(logPath, logs);
 }
 
 /*******************************
@@ -178,15 +210,15 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 	const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
 
 	if (!fm.fileExists(storageDir)) {
-		console.log("Storage folder does not exist! Creating now.");
+		log("Storage folder does not exist! Creating now.");
 		fm.createDirectory(storageDir);
 	} else if (!fm.isDirectory(storageDir)) {
-		console.error("Storage folder exists but is not a directory!");
+		log("Storage folder exists but is not a directory!");
 		return false;
 	}
 
 	if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
-		console.error("Metrics file is a directory, please delete!");
+		log("Metrics file is a directory, please delete!");
 		return false;
 	}
 
@@ -196,7 +228,7 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 	let fileData;
 
 	if (fm.fileExists(metricsPath)) {
-		console.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+		log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
 
 		// Doesn't fail with local filesystem
 		fm.downloadFileFromiCloud(metricsPath);
@@ -205,7 +237,7 @@ function appendPerformanceDataToFile(name, performanceMetrics) {
 		const firstLine = getFirstLine(fileData);
 		headers = firstLine.split(',');
 	} else {
-		console.log("File doesn't exist, using available headers.");
+		log("File doesn't exist, using available headers.");
 		headers = headersAvailable;
 		fileData = headers.toString();
 	}
@@ -268,13 +300,13 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers = [], zoom = '
 // Returns object containing static Google Maps image response (by city) and widget title
 async function getMapsPicByCity(apiKey, city) {
 	try {
-		console.log('Request URI');
-		console.log(getMapUrlByCity(apiKey, city));
+		log('Request URI');
+		log(getMapUrlByCity(apiKey, city));
 		const mapPicRequest = new Request(encodeURI(getMapUrlByCity(apiKey, city)));
 		const mapPic = await mapPicRequest.loadImage();
 		return { image: mapPic, title: city };
 	} catch (e) {
-		console.error(e)
+		log(e)
 		return null;
 	}
 }
@@ -283,12 +315,12 @@ async function getMapsPicByCity(apiKey, city) {
 async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
 	try {
 		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
-		console.log('Request URI');
-		console.log(uri);
+		log('Request URI');
+		log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
 		return await mapPicRequest.loadImage();
 	} catch (e) {
-		console.error(e)
+		log(e)
 		return null;
 	}
 }
@@ -332,10 +364,10 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
 async function getNearbyWikiArticles(lat, lng) {
 	try {
 		const uri = getWikiUrlByCoords(lat, lng);
-		console.log('Request URI: ' + uri);
+		log('Request URI: ' + uri);
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
-		console.log('Wiki JSON: ' + JSON.stringify(wikiJSON));
+		log('Wiki JSON: ' + JSON.stringify(wikiJSON));
 
 		let articles;
 		if (wikiJSON && wikiJSON.query && wikiJSON.query.pages) {
@@ -352,10 +384,10 @@ async function getNearbyWikiArticles(lat, lng) {
 			"thumbnail": article.thumbnail
 		}));
 
-		console.log('Converted Wiki JSON: ' + JSON.stringify(response));
+		log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch (e) {
-		console.error(e);
+		log(e);
 		return null;
 	}
 }
@@ -374,8 +406,8 @@ const createTable = (currLocation, map, items) => {
 	table.addRow(mapRow);
 	let label = 'A';
 	items.forEach(item => {
-		console.log('ITEM');
-		console.log(item);
+		log('ITEM');
+		log(item);
 		const row = new UITableRow();
 		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`;
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
@@ -478,6 +510,13 @@ async function clickWidget(params) {
 
 
 async function run(params) {
+    if (params) {
+	    log("Using params: " + JSON.stringify(params));
+    } else {
+        log("No valid parameters!");
+        return;
+    }
+
 	if (config.runsInWidget) {
 		const widget = await createWidget(params);
 		Script.setWidget(widget);
@@ -494,9 +533,9 @@ async function run(params) {
 	appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
 }
 
-if (params) {
-	console.log("Using params: " + JSON.stringify(params));
-	await run(params);
-} else {
-	console.log("No valid parameters!");
+try {
+    await run(params);
+} catch (err) {
+	log(err);
+    writeLogs(Script.name(), logs)
 }
