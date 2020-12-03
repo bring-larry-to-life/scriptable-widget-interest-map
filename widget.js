@@ -39,7 +39,7 @@ const getCurrentLocation = async() => {
 			'latitude': res.latitude,
 			'longitude': res.longitude
 		};
-	}, err => console.error(`Could not get current location: ${err}`));
+	}, err => log(err));
 };
 
 /*
