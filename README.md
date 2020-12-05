@@ -28,8 +28,7 @@ Sometimes storing widget parameters in the script itself is too limiting. For re
     * This is great for displaying multiple of the same widget on your home screen. Think different locations, different sizes, etc.
     * This is also great for sharing the script file without risking sharing sensitive information (API key).
  2. JSON file "./storage/scriptname.json".
-    * This is great when you are using tools that update the script's file regularly. For example, [this developer tool](https://github.com/stanleyrya/scriptable-script-updater) updates scripts using Github.
-    * By storing the parameters in a file you won't have to repetitively go into the file and rewrite your parameters.
+    * This is great when you are using tools that update the script's file regularly. For example, [this developer tool](https://github.com/stanleyrya/scriptable-script-updater) updates scripts using Github. By storing the parameters in a file you won't have to go into the file and rewrite your parameters each time the file is downloaded/updated again.
     * This is also useful for sensitive information (API key).
  3. Hard-coded parameters at the top of the file.
 
