@@ -11,7 +11,7 @@
 4. [Edit the script params section at the top of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
 ```
 const scriptParams = {
-	apiKey: 'XXX',
+	apiKey: 'XXX', <--- Put the API key here!
 	forceWidgetView: false,
 	writeLogsIfException: false,
 	logPerformanceMetrics: false
@@ -26,11 +26,11 @@ Sometimes storing widget parameters in the script itself is too limiting. For re
 
  1. Parameters passed in from the widget on the home screen.
     * This is great for displaying multiple of the same widget on your home screen. Think different locations, different sizes, etc.
-    * This is also great for sharing the script file without risking sharing sensitive information (API Key).
+    * This is also great for sharing the script file without risking sharing sensitive information (API key).
  2. JSON file "./storage/scriptname.json".
     * This is great when you are using tools that update the script's file regularly. For example, [this developer tool](https://github.com/stanleyrya/scriptable-script-updater) updates scripts using Github.
     * By storing the parameters in a file you won't have to repetitively go into the file and rewrite your parameters.
-    * This is also useful for sensitive information (API Key).
+    * This is also useful for sensitive information (API key).
  3. Hard-coded parameters at the top of the file.
 
 ## Debugging
