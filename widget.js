@@ -9,6 +9,11 @@
  * titles, and quick links to Wikipedia and Google Maps directions.
  */
 
+let logs = "";
+const performanceResultsInMillis = {};
+// Refresh interval in hours
+const refreshInterval = 6;
+
 /*
  * Parameters
  *
@@ -29,14 +34,9 @@ const scriptParams = {
 	logPerformanceMetrics: false
 }
 
-const params = JSON.parse(args.widgetParameter) || loadStoredParameters(Script.name()) || scriptParams;
+const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
+const params = widgetParams || loadStoredParameters(Script.name()) || scriptParams;
 const { apiKey } = params;
-
-// Refresh interval in hours
-const refreshInterval = 6
-
-let logs = "";
-const performanceResultsInMillis = {};
 
 /*******************************
  ****** UTILITY FUNCTIONS ******
