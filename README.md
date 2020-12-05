@@ -11,19 +11,51 @@
 4. [Edit the script params section at the top of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
 ```
 const scriptParams = {
-    apiKey: 'XXX',
-    debug: false
+	apiKey: 'XXX',
+	forceWidgetView: false,
+	writeLogsIfException: false,
+	logPerformanceMetrics: false
 }
 ```
 5. Create a new Scriptable widget on your home screen and edit it to use the script you downloaded.
 6. Enjoy!
 
-## Performance Metrics
-Performance metrics are stored in a CSV file and can be read easily using the "Charty" app with this shortcut:
+## Other ways to load parameters
+
+Sometimes storing widget parameters in the script itself is too limiting. For reasons explained below the script will attempt to load parameters in this order:
+
+ 1. Parameters passed in from the widget on the home screen.
+    * This is great for displaying multiple of the same widget on your home screen. Think different locations, different sizes, etc.
+    * This is also great for sharing the script file without risking sharing sensitive information (API Key).
+ 2. JSON file "./storage/scriptname.json".
+    * This is great when you are using tools that update the script's file regularly. For example, [this developer tool](https://github.com/stanleyrya/scriptable-script-updater) updates scripts using Github.
+    * By storing the parameters in a file you won't have to repetitively go into the file and rewrite your parameters.
+    * This is also useful for sensitive information (API Key).
+ 3. Hard-coded parameters at the top of the file.
+
+## Debugging
+
+There are three useful tools for debugging built-in to this script. They can all be turned on by setting their parameter to true. They are:
+
+1. forceWidgetView: Loads the widget even if run directly from scriptable. Useful for seeing the widget view's logs.
+2. writeLogsIfException: Writes the script's logs to a file if there is an exception. Be careful, right now it will overrite the file every time there is an exception.
+3. logPerformanceMetrics: Stores function performance metrics each time the script runs. Appends how long each function takes in milliseconds to a CSV if they are wrapped by the performanceWrapper.
+
+### Failure Logs
+If turned on, the script will write it's logs to the file system whenever it encounters a failure. The logs of the script are stored in the scriptable folder under `storage/scriptname-logs.txt`.
+
+Please note that the logs will be overwritten each time there is a new failure if this feature is turned on.
+
+[Here's an issue where the failure logs where useful.](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/issues/12)
+
+### Performance Metrics
+If turned on, performance metrics are stored in a CSV file. They can be found in the scriptable folder under `storage/scriptname-performance-metrics.csv`.
+
+CSV files could be read directly or visualized in Excel and Google Sheets. They can also be read easily using the [Charty](https://chartyios.app/) app with this shortcut:
 
 https://www.icloud.com/shortcuts/932366757e124075ae6f755da89563eb
 
-If you're feeling lazy you can also just look at the CSV file directly or even play with it in Excell and Google Sheets.
+Here's an investigation where the performance logs were useful:
 
 |  Performance Graph   |   Investigation  |
 | --- | --- |

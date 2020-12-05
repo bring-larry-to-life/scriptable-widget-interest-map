@@ -18,9 +18,9 @@ const refreshInterval = 6;
  * Parameters
  *
  * apiKey: [REQUIRED] The Google Maps API Key.
- * forceWidgetView: Loads the widget even if run directly from scriptable. Useful for debugging.
- * writeLogsIfException: Writes the logs to a file if there is an exception. Be careful, right now it will overrite the file every time there is an exception.
- * logPerformanceMetrics: Appends how long each function takes in milliseconds to a CSV if they are wrapped by the performanceWrapper.
+ * forceWidgetView: Loads the widget even if run directly from scriptable. Useful for seeing the widget view's logs.
+ * writeLogsIfException: Writes the script's logs to a file if there is an exception. Be careful, right now it will overrite the file every time there is an exception.
+ * logPerformanceMetrics: Stores function performance metrics each time the script runs. Appends how long each function takes in milliseconds to a CSV if they are wrapped by the performanceWrapper.
  *
  * Attempts to load parameters in this order:
  * 1. Widget parameters
