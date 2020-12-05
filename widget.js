@@ -340,6 +340,7 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
 
 /*
  * Calls wikipedia for nearby articles and modifies the object for ease of use.
+ * Returns an empty array if there are no results or if there is a failure.
  *
  * Example Wikipedia API:
  * https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates%7Cpageimages&generator=geosearch&ggscoord=41.68365535753726|-70.19823287890266&ggsradius=10000
@@ -388,7 +389,7 @@ async function getNearbyWikiArticles(lat, lng) {
 		return response;
 	} catch (e) {
 		log(e);
-		return null;
+		return [];
 	}
 }
 
