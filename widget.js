@@ -9,17 +9,28 @@
  * titles, and quick links to Wikipedia and Google Maps directions.
  */
 
-
-// Use true to load widget from scriptable (as opposed to the list view).
-// Can also be set in the widget parameters object.
-const debug = false;
-
-const scriptParams = null //{
-//     apiKey: 'XXX',
-//     debug: false
-// }
+/*
+ * Parameters
+ *
+ * apiKey: [REQUIRED] The Google Maps API Key.
+ * forceWidgetView: Loads the widget even if run directly from scriptable. Useful for debugging.
+ * writeLogsIfException: Writes the logs to a file if there is an exception. Be careful, right now it will overrite the file every time there is an exception.
+ * logPerformanceMetrics: Appends how long each function takes in milliseconds to a CSV if they are wrapped by the performanceWrapper.
+ *
+ * Attempts to load parameters in this order:
+ * 1. Widget parameters
+ * 2. JSON file "./storage/scriptname.json"
+ * 3. Hard-coded parameters right here:
+ */
+const scriptParams = {
+	apiKey: 'XXX',
+	forceWidgetView: false,
+	writeLogsIfException: false,
+	logPerformanceMetrics: false
+}
 
 const params = JSON.parse(args.widgetParameter) || loadStoredParameters(Script.name()) || scriptParams;
+const { apiKey } = params;
 
 // Refresh interval in hours
 const refreshInterval = 6
@@ -142,35 +153,39 @@ function loadStoredParameters(name) {
 	}
 }
 
+/***************************
+ **** LOGGING FUNCTIONS ****
+ ***************************/
+
 function log(line) {
-  if (line instanceof Error) {
-    console.error(line);
-  } else {
-    console.log(line);
-  }
-  logs += new Date() + " - " + line + "\n";
+	if (line instanceof Error) {
+		console.error(line);
+	} else {
+		console.log(line);
+	}
+	logs += new Date() + " - " + line + "\n";
 }
 
 /**
  * Attempts to write logs to the file ./storage/name-logs.txt
  */
 function writeLogs(name, logs) {
-    const fm = getFileManager();
-    const storageDir = getCurrentDir() + "storage";
-    const logPath = storageDir + "/" + name + "-logs.txt";
+	const fm = getFileManager();
+	const storageDir = getCurrentDir() + "storage";
+	const logPath = storageDir + "/" + name + "-logs.txt";
 
-    if (!fm.fileExists(storageDir)) {
-        log("Storage folder does not exist! Creating now.");
-        fm.createDirectory(storageDir);
-    } else if (!fm.isDirectory(storageDir)) {
-        throw ("Storage folder exists but is not a directory!");
-    }
+	if (!fm.fileExists(storageDir)) {
+		log("Storage folder does not exist! Creating now.");
+		fm.createDirectory(storageDir);
+	} else if (!fm.isDirectory(storageDir)) {
+		throw ("Storage folder exists but is not a directory!");
+	}
 
-    if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
-        throw ("Log file is a directory, please delete!");
-    }
+	if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
+		throw ("Log file is a directory, please delete!");
+	}
 
-    fm.writeString(logPath, logs);
+	fm.writeString(logPath, logs);
 }
 
 /*******************************
@@ -430,8 +445,7 @@ const createTable = (currLocation, map, items) => {
 	return table;
 }
 
-async function createWidget(params) {
-	const { apiKey } = params;
+async function createWidget() {
 	let widget = new ListWidget();
 	let currLocation = await performanceWrapper(getCurrentLocation);
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
@@ -500,8 +514,7 @@ async function createWidget(params) {
 	return widget;
 }
 
-async function clickWidget(params) {
-	const { apiKey } = params;
+async function clickWidget() {
 	let currLocation = await performanceWrapper(getCurrentLocation);
 	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
 	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
@@ -509,34 +522,44 @@ async function clickWidget(params) {
 	await QuickLook.present(table);
 }
 
+async function run() {
+	if (params) {
+		log("Using params: " + JSON.stringify(params));
+	} else {
+		log("No valid parameters!");
+		return;
+	}
 
-async function run(params) {
-    if (params) {
-	    log("Using params: " + JSON.stringify(params));
-    } else {
-        log("No valid parameters!");
-        return;
-    }
+	if (!params.apiKey || params.apiKey === 'XXX') {
+		log("You must provide an API Key from Google to use this script.");
+		return;
+	}
 
 	if (config.runsInWidget) {
-		const widget = await createWidget(params);
+		const widget = await createWidget();
 		Script.setWidget(widget);
 		Script.complete();
 
-	} else if (debug || params.debug) {
+	} else if (params.forceWidgetView) {
 		// Useful for loading widget and seeing logs manually
-		const widget = await createWidget(params);
+		const widget = await createWidget();
 		await widget.presentMedium();
 
 	} else {
-		await clickWidget(params);
+		await clickWidget();
 	}
-	appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
+
+	if (params.logPerformanceMetrics) {
+		appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
+	}
 }
 
 try {
-    await run(params);
+	await run();
 } catch (err) {
 	log(err);
-    writeLogs(Script.name(), logs)
+	if (params.writeLogsIfException) {
+		writeLogs(Script.name(), logs)
+	}
+	throw err;
 }
