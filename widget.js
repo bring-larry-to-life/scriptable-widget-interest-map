@@ -226,8 +226,8 @@ class PerformanceDebugger {
 	 * 450, 300
 	 */
 	appendPerformanceDataToFile() {
-		const fm = getFileManager();
-		const storageDir = getCurrentDir() + "storage";
+		const fm = this.getFileManager();
+		const storageDir = this.getCurrentDir() + "storage";
 		const metricsPath = storageDir + "/" + this.storageFileName + '-performance-metrics.csv';
 
 		if (!fm.fileExists(storageDir)) {
@@ -282,6 +282,20 @@ class PerformanceDebugger {
 		return text.substring(0, index);
 	}
 
+}
+
+function getFileManager() {
+	try {
+		return FileManager.iCloud();
+	} catch (e) {
+		return FileManager.local();
+	}
+}
+
+function getCurrentDir() {
+	const fm = this.getFileManager();
+	const thisScriptPath = module.filename;
+	return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
 }
 
 const performanceDebugger = new PerformanceDebugger(Script.name());
