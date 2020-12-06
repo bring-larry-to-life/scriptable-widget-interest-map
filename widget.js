@@ -10,7 +10,6 @@
  */
 
 let logs = "";
-const performanceResultsInMillis = {};
 // Refresh interval in hours
 const refreshInterval = 6;
 
@@ -192,88 +191,99 @@ function writeLogs(name, logs) {
  **** PERFORMANCE FUNCTIONS ****
  *******************************/
 
-/**
- * Times a function's execution in milliseconds and stores the results in the performanceResultsInMillis object.
- *
- * Here are two examples on how to use it, one without parameters and one with:
- * let currLocation = await performanceWrapper(getCurrentLocation);
- * let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
- *
- * Here's an example of what the performanceResultsInMillis would look like after those two function calls:
- * { "getCurrentLocation": 3200, "getNearbyWikiArticles": 312 }
- */
-const performanceWrapper = async(fn, args) => {
-	const start = Date.now();
-	const result = await fn.apply(null, args);
-	const end = Date.now();
-	performanceResultsInMillis[fn.name] = (end - start);
-	return result;
-}
+const performanceDebugger = new PerformanceDebugger(Script.name());
 
-/**
- * Attempts to write the performanceResultsInMillis object to the file ./storage/name-performance-metrics.csv
- * Returns false if it cannot be written.
- *
- * Example output looks like this:
- * getCurrentLocation, getNearbyWikiArticles
- * 3200, 312
- * 450, 300
- */
-function appendPerformanceDataToFile(name, performanceMetrics) {
-	const fm = getFileManager();
-	const storageDir = getCurrentDir() + "storage";
-	const metricsPath = storageDir + "/" + name + '-performance-metrics.csv';
+class PerformanceDebugger {
 
-	if (!fm.fileExists(storageDir)) {
-		log("Storage folder does not exist! Creating now.");
-		fm.createDirectory(storageDir);
-	} else if (!fm.isDirectory(storageDir)) {
-		log("Storage folder exists but is not a directory!");
-		return false;
+	constructor(storageFileName) {
+		this.performanceResultsInMillis = {};
+		this.storageFileName = storageFileName;
 	}
 
-	if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
-		log("Metrics file is a directory, please delete!");
-		return false;
+	/**
+	 * Times a function's execution in milliseconds and stores the results in the performanceResultsInMillis object.
+	 *
+	 * Here are two examples on how to use it, one without parameters and one with:
+	 * let currLocation = await performanceWrapper(getCurrentLocation);
+	 * let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	 *
+	 * Here's an example of what the performanceResultsInMillis would look like after those two function calls:
+	 * { "getCurrentLocation": 3200, "getNearbyWikiArticles": 312 }
+	 */
+	async wrap(fn, args) {
+		const start = Date.now();
+		const result = await fn.apply(null, args);
+		const end = Date.now();
+		this.performanceResultsInMillis[fn.name] = (end - start);
+		return result;
 	}
 
-	let headersAvailable = Object.getOwnPropertyNames(performanceMetrics);
+	/**
+	 * Attempts to write the performanceResultsInMillis object to the file ./storage/name-performance-metrics.csv
+	 * Returns false if it cannot be written.
+	 *
+	 * Example output looks like this:
+	 * getCurrentLocation, getNearbyWikiArticles
+	 * 3200, 312
+	 * 450, 300
+	 */
+	appendPerformanceDataToFile() {
+		const fm = getFileManager();
+		const storageDir = getCurrentDir() + "storage";
+		const metricsPath = storageDir + "/" + this.storageFileName + '-performance-metrics.csv';
 
-	let headers;
-	let fileData;
-
-	if (fm.fileExists(metricsPath)) {
-		log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
-
-		// Doesn't fail with local filesystem
-		fm.downloadFileFromiCloud(metricsPath);
-
-		fileData = fm.readString(metricsPath);
-		const firstLine = getFirstLine(fileData);
-		headers = firstLine.split(',');
-	} else {
-		log("File doesn't exist, using available headers.");
-		headers = headersAvailable;
-		fileData = headers.toString();
-	}
-
-	// Append the data if it exists for the available headers
-	fileData = fileData.concat("\n");
-	for (const header of headers) {
-		if (performanceMetrics[header]) {
-			fileData = fileData.concat(performanceMetrics[header]);
+		if (!fm.fileExists(storageDir)) {
+			log("Storage folder does not exist! Creating now.");
+			fm.createDirectory(storageDir);
+		} else if (!fm.isDirectory(storageDir)) {
+			log("Storage folder exists but is not a directory!");
+			return false;
 		}
-		fileData = fileData.concat(",");
+
+		if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
+			log("Metrics file is a directory, please delete!");
+			return false;
+		}
+
+		let headersAvailable = Object.getOwnPropertyNames(this.performanceResultsInMillis);
+
+		let headers;
+		let fileData;
+
+		if (fm.fileExists(metricsPath)) {
+			log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+
+			// Doesn't fail with local filesystem
+			fm.downloadFileFromiCloud(metricsPath);
+
+			fileData = fm.readString(metricsPath);
+			const firstLine = getFirstLine(fileData);
+			headers = firstLine.split(',');
+		} else {
+			log("File doesn't exist, using available headers.");
+			headers = headersAvailable;
+			fileData = headers.toString();
+		}
+
+		// Append the data if it exists for the available headers
+		fileData = fileData.concat("\n");
+		for (const header of headers) {
+			if (this.performanceResultsInMillis[header]) {
+				fileData = fileData.concat(this.performanceResultsInMillis[header]);
+			}
+			fileData = fileData.concat(",");
+		}
+		fileData = fileData.slice(0, -1);
+
+		fm.writeString(metricsPath, fileData);
 	}
-	fileData = fileData.slice(0, -1);
 
-	fm.writeString(metricsPath, fileData);
-}
+	getFirstLine(text) {
+		var index = text.indexOf("\n");
+		if (index === -1) index = undefined;
+		return text.substring(0, index);
+	}
 
-function getFirstLine(text) {
-	var index = text.indexOf("\n");
-	if (index === -1) index = undefined;
-	return text.substring(0, index);
 }
 
 /*******************************
@@ -447,10 +457,10 @@ const createTable = (currLocation, map, items) => {
 
 async function createWidget() {
 	let widget = new ListWidget();
-	let currLocation = await performanceWrapper(getCurrentLocation);
-	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	// let image = await performanceWrapper(getMapsPicByCity, [apiKey, 'Boston, MA']);
-	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	// let image = await performanceDebugger.wrap(getMapsPicByCity, [apiKey, 'Boston, MA']);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	widget.backgroundImage = image;
 
 	let startColor = new Color("#1c1c1c00");
@@ -515,9 +525,9 @@ async function createWidget() {
 }
 
 async function clickWidget() {
-	let currLocation = await performanceWrapper(getCurrentLocation);
-	let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	let image = await performanceWrapper(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
 	const table = createTable(currLocation, image, wikiArticles);
 	await QuickLook.present(table);
 }
@@ -550,7 +560,7 @@ async function run() {
 	}
 
 	if (params.logPerformanceMetrics) {
-		appendPerformanceDataToFile(Script.name(), performanceResultsInMillis);
+		performanceDebugger.appendPerformanceDataToFile();
 	}
 }
 
