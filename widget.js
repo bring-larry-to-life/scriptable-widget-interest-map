@@ -191,8 +191,6 @@ function writeLogs(name, logs) {
  **** PERFORMANCE FUNCTIONS ****
  *******************************/
 
-const performanceDebugger = new PerformanceDebugger(Script.name());
-
 class PerformanceDebugger {
 
 	constructor(storageFileName) {
@@ -257,7 +255,7 @@ class PerformanceDebugger {
 			fm.downloadFileFromiCloud(metricsPath);
 
 			fileData = fm.readString(metricsPath);
-			const firstLine = getFirstLine(fileData);
+			const firstLine = this.getFirstLine(fileData);
 			headers = firstLine.split(',');
 		} else {
 			log("File doesn't exist, using available headers.");
@@ -285,6 +283,8 @@ class PerformanceDebugger {
 	}
 
 }
+
+const performanceDebugger = new PerformanceDebugger(Script.name());
 
 /*******************************
  **** GOOGLE MAPS FUNCTIONS ****
