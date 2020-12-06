@@ -282,20 +282,20 @@ class PerformanceDebugger {
 		return text.substring(0, index);
 	}
 
-}
-
-function getFileManager() {
-	try {
-		return FileManager.iCloud();
-	} catch (e) {
-		return FileManager.local();
+	getFileManager() {
+		try {
+			return FileManager.iCloud();
+		} catch (e) {
+			return FileManager.local();
+		}
 	}
-}
 
-function getCurrentDir() {
-	const fm = this.getFileManager();
-	const thisScriptPath = module.filename;
-	return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	getCurrentDir() {
+		const fm = this.getFileManager();
+		const thisScriptPath = module.filename;
+		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	}
+
 }
 
 const performanceDebugger = new PerformanceDebugger(Script.name());
