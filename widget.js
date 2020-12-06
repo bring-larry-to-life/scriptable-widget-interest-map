@@ -9,7 +9,6 @@
  * titles, and quick links to Wikipedia and Google Maps directions.
  */
 
-let logs = "";
 // Refresh interval in hours
 const refreshInterval = 6;
 
@@ -127,16 +126,16 @@ function loadStoredParameters(name) {
 	const parameterPath = storageDir + "/" + name + ".json";
 
 	if (!fm.fileExists(storageDir)) {
-		log("Storage folder does not exist!");
+		logger.log("Storage folder does not exist!");
 		return null;
 	} else if (!fm.isDirectory(storageDir)) {
-		log("Storage folder exists but is not a directory!");
+		logger.log("Storage folder exists but is not a directory!");
 		return null;
 	} else if (!fm.fileExists(parameterPath)) {
-		log("Parameter file does not exist!");
+		logger.log("Parameter file does not exist!");
 		return null;
 	} else if (fm.isDirectory(parameterPath)) {
-		log("Parameter file is a directory!");
+		logger.log("Parameter file is a directory!");
 		return null;
 	}
 
@@ -147,7 +146,7 @@ function loadStoredParameters(name) {
 	if (parameterJSON !== null) {
 		return parameterJSON;
 	} else {
-		log("Could not load parameter file as JSON!");
+		logger.log("Could not load parameter file as JSON!");
 		return null;
 	}
 }
@@ -156,36 +155,70 @@ function loadStoredParameters(name) {
  **** LOGGING FUNCTIONS ****
  ***************************/
 
-function log(line) {
-	if (line instanceof Error) {
-		console.error(line);
-	} else {
-		console.log(line);
-	}
-	logs += new Date() + " - " + line + "\n";
-}
-
 /**
- * Attempts to write logs to the file ./storage/name-logs.txt
+ * Class that can capture the time functions take in milliseconds then export them to a CSV.
+ * The log file is stored in ./storage/name-logs.txt
+ *
+ * Usage:
+ *  * For input most of the time you want to use Script.name().
+ *  * Use log(line) instead of console.log().
+ *  * Use writeLogs() at the end of your script to write the logs to the txt file.
  */
-function writeLogs(name, logs) {
-	const fm = getFileManager();
-	const storageDir = getCurrentDir() + "storage";
-	const logPath = storageDir + "/" + name + "-logs.txt";
+class LoggingDebugger {
 
-	if (!fm.fileExists(storageDir)) {
-		log("Storage folder does not exist! Creating now.");
-		fm.createDirectory(storageDir);
-	} else if (!fm.isDirectory(storageDir)) {
-		throw ("Storage folder exists but is not a directory!");
+	constructor(storageFileName) {
+		this.storageFileName = storageFileName;
+		this.logs = "";
 	}
 
-	if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
-		throw ("Log file is a directory, please delete!");
+	log(line) {
+		if (line instanceof Error) {
+			console.error(line);
+		} else {
+			console.log(line);
+		}
+		this.logs += new Date() + " - " + line + "\n";
 	}
 
-	fm.writeString(logPath, logs);
+	/**
+	 * Attempts to write logs to the file ./storage/name-logs.txt
+	 */
+	writeLogs() {
+		const fm = this.getFileManager();
+		const storageDir = this.getCurrentDir() + "storage";
+		const logPath = storageDir + "/" + this.storageFileName + "-logs.txt";
+
+		if (!fm.fileExists(storageDir)) {
+			log("Storage folder does not exist! Creating now.");
+			fm.createDirectory(storageDir);
+		} else if (!fm.isDirectory(storageDir)) {
+			throw ("Storage folder exists but is not a directory!");
+		}
+
+		if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
+			throw ("Log file is a directory, please delete!");
+		}
+
+		fm.writeString(logPath, this.logs);
+	}
+
+	getFileManager() {
+		try {
+			return FileManager.iCloud();
+		} catch (e) {
+			return FileManager.local();
+		}
+	}
+
+	getCurrentDir() {
+		const fm = this.getFileManager();
+		const thisScriptPath = module.filename;
+		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	}
+
 }
+
+const logger = new LoggingDebugger(Script.name());
 
 /*******************************
  **** PERFORMANCE FUNCTIONS ****
@@ -240,15 +273,15 @@ class PerformanceDebugger {
 		const metricsPath = storageDir + "/" + this.storageFileName + '-performance-metrics.csv';
 
 		if (!fm.fileExists(storageDir)) {
-			log("Storage folder does not exist! Creating now.");
+			logger.log("Storage folder does not exist! Creating now.");
 			fm.createDirectory(storageDir);
 		} else if (!fm.isDirectory(storageDir)) {
-			log("Storage folder exists but is not a directory!");
+			logger.log("Storage folder exists but is not a directory!");
 			return false;
 		}
 
 		if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
-			log("Metrics file is a directory, please delete!");
+			logger.log("Metrics file is a directory, please delete!");
 			return false;
 		}
 
@@ -258,7 +291,7 @@ class PerformanceDebugger {
 		let fileData;
 
 		if (fm.fileExists(metricsPath)) {
-			log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
+			logger.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
 
 			// Doesn't fail with local filesystem
 			fm.downloadFileFromiCloud(metricsPath);
@@ -267,7 +300,7 @@ class PerformanceDebugger {
 			const firstLine = this.getFirstLine(fileData);
 			headers = firstLine.split(',');
 		} else {
-			log("File doesn't exist, using available headers.");
+			logger.log("File doesn't exist, using available headers.");
 			headers = headersAvailable;
 			fileData = headers.toString();
 		}
@@ -348,13 +381,13 @@ const getMapUrlByCoordinates = (apiKey, userLat, userLng, markers = [], zoom = '
 // Returns object containing static Google Maps image response (by city) and widget title
 async function getMapsPicByCity(apiKey, city) {
 	try {
-		log('Request URI');
-		log(getMapUrlByCity(apiKey, city));
+		logger.log('Request URI');
+		logger.log(getMapUrlByCity(apiKey, city));
 		const mapPicRequest = new Request(encodeURI(getMapUrlByCity(apiKey, city)));
 		const mapPic = await mapPicRequest.loadImage();
 		return { image: mapPic, title: city };
 	} catch (e) {
-		log(e)
+		logger.log(e)
 		return null;
 	}
 }
@@ -363,12 +396,12 @@ async function getMapsPicByCity(apiKey, city) {
 async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
 	try {
 		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
-		log('Request URI');
-		log(uri);
+		logger.log('Request URI');
+		logger.log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
 		return await mapPicRequest.loadImage();
 	} catch (e) {
-		log(e)
+		logger.log(e)
 		return null;
 	}
 }
@@ -413,10 +446,10 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
 async function getNearbyWikiArticles(lat, lng) {
 	try {
 		const uri = getWikiUrlByCoords(lat, lng);
-		log('Request URI: ' + uri);
+		logger.log('Request URI: ' + uri);
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
-		log('Wiki JSON: ' + JSON.stringify(wikiJSON));
+		logger.log('Wiki JSON: ' + JSON.stringify(wikiJSON));
 
 		let articles;
 		if (wikiJSON && wikiJSON.query && wikiJSON.query.pages) {
@@ -433,10 +466,10 @@ async function getNearbyWikiArticles(lat, lng) {
 			"thumbnail": article.thumbnail
 		}));
 
-		log('Converted Wiki JSON: ' + JSON.stringify(response));
+		logger.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch (e) {
-		log(e);
+		logger.log(e);
 		return [];
 	}
 }
@@ -455,8 +488,8 @@ const createTable = (currLocation, map, items) => {
 	table.addRow(mapRow);
 	let label = 'A';
 	items.forEach(item => {
-		log('ITEM');
-		log(item);
+		logger.log('ITEM');
+		logger.log(item);
 		const row = new UITableRow();
 		const markerUrl = `http://maps.google.com/mapfiles/kml/paddle/${label}.png`;
 		const imageUrl = item.thumbnail ? item.thumbnail.source : '';
@@ -557,14 +590,14 @@ async function clickWidget() {
 
 async function run() {
 	if (params) {
-		log("Using params: " + JSON.stringify(params));
+		logger.log("Using params: " + JSON.stringify(params));
 	} else {
-		log("No valid parameters!");
+		logger.log("No valid parameters!");
 		return;
 	}
 
 	if (!params.apiKey || params.apiKey === 'XXX') {
-		log("You must provide an API Key from Google to use this script.");
+		logger.log("You must provide an API Key from Google to use this script.");
 		return;
 	}
 
@@ -574,7 +607,7 @@ async function run() {
 		Script.complete();
 
 	} else if (params.forceWidgetView) {
-		// Useful for loading widget and seeing logs manually
+		// Useful for loading widget and seeing logger.logs manually
 		const widget = await createWidget();
 		await widget.presentMedium();
 
@@ -590,9 +623,9 @@ async function run() {
 try {
 	await run();
 } catch (err) {
-	log(err);
+	logger.log(err);
 	if (params.writeLogsIfException) {
-		writeLogs(Script.name(), logs)
+		logger.writeLogs()
 	}
 	throw err;
 }
