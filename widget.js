@@ -191,11 +191,20 @@ function writeLogs(name, logs) {
  **** PERFORMANCE FUNCTIONS ****
  *******************************/
 
+/**
+ * Class that can capture the time functions take in milliseconds then export them to a CSV.
+ * The CSV file is stored in ./storage/storageFileName-performance-metrics.csv
+ *
+ * Usage:
+ *  * For input most of the time you want to use Script.name().
+ *  * Use wrap(fn, args) to wrap the functions you want to monitor.
+ *  * Use appendPerformanceDataToFile() at the end of your script to write the metrics to the CSV file.
+ */
 class PerformanceDebugger {
 
 	constructor(storageFileName) {
-		this.performanceResultsInMillis = {};
 		this.storageFileName = storageFileName;
+		this.performanceResultsInMillis = {};
 	}
 
 	/**
