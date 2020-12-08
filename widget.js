@@ -412,7 +412,7 @@ async function run() {
 	if (params.overrideLatitude && params.overrideLongitude) {
 		location = {
 			latitude: params.overrideLatitude,
-			longitude: params.overrideLatitude
+			longitude: params.overrideLongitude
 		}
 	} else {
 		location = await performanceDebugger.wrap(getCurrentLocation);
