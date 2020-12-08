@@ -30,10 +30,23 @@ const jsonFileManager = new JSONFileManager();
  *
  * Usage:
  *  * log(line): Adds the log line to the class' internal log object.
- *  * writeLogs(relativeFilePath): Writes the stored logs to the relative file path.
+ *  * writeLogs(relativePath): Writes the stored logs to the relative file path.
  */
 class FileLogger{constructor(){this.logs=""}log(e){e instanceof Error?console.error(e):console.log(e),this.logs+=new Date+" - "+e+"\n"}writeLogs(e){const r=this.getFileManager(),t=this.getCurrentDir()+e,i=e.split("/");if(i>1){const e=i[i.length-1],l=t.replace("/"+e,"");r.createDirectory(l,!0)}if(r.fileExists(t)&&r.isDirectory(t))throw"Log file is a directory, please delete!";r.writeString(t,this.logs)}getFileManager(){try{return FileManager.iCloud()}catch(e){return FileManager.local()}}getCurrentDir(){const e=this.getFileManager(),r=module.filename;return r.replace(e.fileName(r,!0),"")}}
 const logger = new FileLogger();
+
+/**
+ * Class that can capture the time functions take in milliseconds then export them to a CSV.
+ *
+ * This is a minified version but it can be replaced with the full version by copy pasting this code!
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/append-to-performance-metrics.js
+ *
+ * Usage:
+ *  * wrap(fn, args): Wrap the function calls you want to monitor with this wrapper.
+ *  * appendPerformanceDataToFile(relativePath): Use at the end of your script to write the metrics to the CSV file at the relative file path.
+ */
+class PerformanceDebugger{constructor(){this.performanceResultsInMillis={}}async wrap(e,t){const r=Date.now(),i=await e.apply(null,t),s=Date.now();return this.performanceResultsInMillis[e.name]=s-r,i}appendPerformanceDataToFile(e){const t=this.getFileManager(),r=this.getCurrentDir()+e,i=e.split("/");if(i>1){const e=i[i.length-1],s=r.replace("/"+e,"");t.createDirectory(s,!0)}if(t.fileExists(r)&&t.isDirectory(r))throw"Performance file is a directory, please delete!";let s,n,l=Object.getOwnPropertyNames(this.performanceResultsInMillis);if(t.fileExists(r)){console.log("File exists, reading headers. To keep things easy we're only going to write to these headers."),t.downloadFileFromiCloud(r),n=t.readString(r),s=this.getFirstLine(n).split(",")}else console.log("File doesn't exist, using available headers."),n=(s=l).toString();n=n.concat("\n");for(const e of s)this.performanceResultsInMillis[e]&&(n=n.concat(this.performanceResultsInMillis[e])),n=n.concat(",");n=n.slice(0,-1),t.writeString(r,n)}getFirstLine(e){var t=e.indexOf("\n");return-1===t&&(t=void 0),e.substring(0,t)}getFileManager(){try{return FileManager.iCloud()}catch(e){return FileManager.local()}}getCurrentDir(){const e=this.getFileManager(),t=module.filename;return t.replace(e.fileName(t,!0),"")}}
+const performanceDebugger = new PerformanceDebugger();
 
 /*
  * Parameters
@@ -135,128 +148,6 @@ const getLocationDescription = async(lat, long) => {
 const nextChar = (c) => {
 	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
-
-/*******************************
- **** PERFORMANCE FUNCTIONS ****
- *******************************/
-
-/**
- * Class that can capture the time functions take in milliseconds then export them to a CSV.
- * The CSV file is stored in ./storage/storageFileName-performance-metrics.csv
- *
- * Usage:
- *  * For input most of the time you want to use Script.name().
- *  * Use wrap(fn, args) to wrap the functions you want to monitor.
- *  * Use appendPerformanceDataToFile() at the end of your script to write the metrics to the CSV file.
- */
-class PerformanceDebugger {
-
-	constructor(storageFileName) {
-		this.storageFileName = storageFileName;
-		this.performanceResultsInMillis = {};
-	}
-
-	/**
-	 * Times a function's execution in milliseconds and stores the results in the performanceResultsInMillis object.
-	 *
-	 * Here are two examples on how to use it, one without parameters and one with:
-	 * let currLocation = await performanceWrapper(getCurrentLocation);
-	 * let wikiArticles = await performanceWrapper(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	 *
-	 * Here's an example of what the performanceResultsInMillis would look like after those two function calls:
-	 * { "getCurrentLocation": 3200, "getNearbyWikiArticles": 312 }
-	 */
-	async wrap(fn, args) {
-		const start = Date.now();
-		const result = await fn.apply(null, args);
-		const end = Date.now();
-		this.performanceResultsInMillis[fn.name] = (end - start);
-		return result;
-	}
-
-	/**
-	 * Attempts to write the performanceResultsInMillis object to the file ./storage/name-performance-metrics.csv
-	 * Returns false if it cannot be written.
-	 *
-	 * Example output looks like this:
-	 * getCurrentLocation, getNearbyWikiArticles
-	 * 3200, 312
-	 * 450, 300
-	 */
-	appendPerformanceDataToFile() {
-		const fm = this.getFileManager();
-		const storageDir = this.getCurrentDir() + "storage";
-		const metricsPath = storageDir + "/" + this.storageFileName + '-performance-metrics.csv';
-
-		if (!fm.fileExists(storageDir)) {
-			logger.log("Storage folder does not exist! Creating now.");
-			fm.createDirectory(storageDir);
-		} else if (!fm.isDirectory(storageDir)) {
-			logger.log("Storage folder exists but is not a directory!");
-			return false;
-		}
-
-		if (fm.fileExists(metricsPath) && fm.isDirectory(metricsPath)) {
-			logger.log("Metrics file is a directory, please delete!");
-			return false;
-		}
-
-		let headersAvailable = Object.getOwnPropertyNames(this.performanceResultsInMillis);
-
-		let headers;
-		let fileData;
-
-		if (fm.fileExists(metricsPath)) {
-			logger.log("File exists, reading headers. To keep things easy we're only going to write to these headers.");
-
-			// Doesn't fail with local filesystem
-			fm.downloadFileFromiCloud(metricsPath);
-
-			fileData = fm.readString(metricsPath);
-			const firstLine = this.getFirstLine(fileData);
-			headers = firstLine.split(',');
-		} else {
-			logger.log("File doesn't exist, using available headers.");
-			headers = headersAvailable;
-			fileData = headers.toString();
-		}
-
-		// Append the data if it exists for the available headers
-		fileData = fileData.concat("\n");
-		for (const header of headers) {
-			if (this.performanceResultsInMillis[header]) {
-				fileData = fileData.concat(this.performanceResultsInMillis[header]);
-			}
-			fileData = fileData.concat(",");
-		}
-		fileData = fileData.slice(0, -1);
-
-		fm.writeString(metricsPath, fileData);
-	}
-
-	getFirstLine(text) {
-		var index = text.indexOf("\n");
-		if (index === -1) index = undefined;
-		return text.substring(0, index);
-	}
-
-	getFileManager() {
-		try {
-			return FileManager.iCloud();
-		} catch (e) {
-			return FileManager.local();
-		}
-	}
-
-	getCurrentDir() {
-		const fm = this.getFileManager();
-		const thisScriptPath = module.filename;
-		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
-	}
-
-}
-
-const performanceDebugger = new PerformanceDebugger(Script.name());
 
 /*******************************
  **** GOOGLE MAPS FUNCTIONS ****
@@ -532,7 +423,7 @@ async function run() {
 	}
 
 	if (params.logPerformanceMetrics) {
-		performanceDebugger.appendPerformanceDataToFile();
+		performanceDebugger.appendPerformanceDataToFile("storage/" + Script.name() + "-performance-metrics.csv");
 	}
 }
 
