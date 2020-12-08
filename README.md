@@ -8,7 +8,7 @@
 1. [Get an API key from Google.](https://developers.google.com/maps/documentation/javascript/get-api-key)
 2. [Download the Scriptable App for iOS.](https://scriptable.app/)
 3. [Copy and paste widget.js into a new script on the Scriptable app.](https://raw.githubusercontent.com/bring-larry-to-life/scriptable-widget-interest-map/main/widget.js)
-4. [Edit the script params section at the top of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
+4. [Edit the script params section of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
 ```
 const scriptParams = {
 	apiKey: 'XXX', <--- Put the API key here!
