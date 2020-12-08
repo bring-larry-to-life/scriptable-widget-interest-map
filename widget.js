@@ -65,7 +65,9 @@ const scriptParams = {
 	apiKey: 'XXX',
 	forceWidgetView: false,
 	writeLogsIfException: false,
-	logPerformanceMetrics: false
+	logPerformanceMetrics: false,
+	overrideLatitude: 42.3549970,
+	overrideLongitude: -71.0644556
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
@@ -406,7 +408,15 @@ async function run() {
 		return;
 	}
 
-	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
+	let location;
+	if (params.overrideLatitude && params.overrideLongitude) {
+		location = {
+			latitude: params.overrideLatitude,
+			longitude: params.overrideLatitude
+		}
+	} else {
+		location = await performanceDebugger.wrap(getCurrentLocation);
+	}
 
 	if (config.runsInWidget) {
 		const widget = await createWidget(currLocation);
