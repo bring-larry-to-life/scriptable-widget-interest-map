@@ -56,7 +56,7 @@ const scriptParams = {
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
-const params = widgetParams || jsonFileManager.loadStoredParameters("storage/" + Script.name()) || scriptParams;
+const params = widgetParams || jsonFileManager.read("storage/" + Script.name() + ".json") || scriptParams;
 const { apiKey } = params;
 
 // Refresh interval in hours
@@ -533,7 +533,7 @@ try {
 } catch (err) {
 	logger.log(err);
 	if (params.writeLogsIfException) {
-		logger.writeLogs()
+		logger.writeLogs("storage/" + Script.name() + ".txt")
 	}
 	throw err;
 }
