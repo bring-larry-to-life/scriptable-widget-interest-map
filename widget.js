@@ -12,6 +12,74 @@
 // Refresh interval in hours
 const refreshInterval = 6;
 
+/**
+ * Class that can read and write JSON objects using the file system.
+ */
+class JSONFileManager {
+
+	/**
+	 * Attempts to write the jsonObject to the relative path.
+	 */
+	write(relativePath, jsonObject) {
+		const fm = this.getFileManager();
+		const jsonPath = this.getCurrentDir() + relativePath;
+
+		const splitRelativePath = relativePath.split("/");
+		if (splitRelativePath > 1) {
+			const fileName = splitRelativePath[splitRelativePath.length - 1];
+			const jsonDirectory = jsonPath.replace("/" + fileName, "");
+			fm.createDirectory(jsonDirectory, true);
+		}
+
+		if (fm.fileExists(jsonPath) && fm.isDirectory(jsonPath)) {
+			throw ("JSON file is a directory, please delete!");
+		}
+
+		fm.writeString(jsonPath, JSON.stringify(jsonObject));
+	}
+
+	/**
+	 * Attempts to load JSON stored at the relative path.
+	 */
+	read(relativePath) {
+		const fm = this.getFileManager();
+		const jsonPath = this.getCurrentDir() + relativePath;
+
+		if (!fm.fileExists(jsonPath)) {
+			throw ("JSON file does not exist! Could not load: " + jsonPath);
+		} else if (fm.isDirectory(jsonPath)) {
+			throw ("JSON file is a directory! Could not load: " + jsonPath);
+		}
+
+		// Doesn't fail with local filesystem
+		fm.downloadFileFromiCloud(jsonPath);
+
+		const loadedJSON = JSON.parse(fm.readString(jsonPath));
+		if (loadedJSON !== null) {
+			return loadedJSON;
+		} else {
+			throw ("Could not read file as JSON! Could not load: " + jsonPath);
+		}
+	}
+
+	getFileManager() {
+		try {
+			return FileManager.iCloud();
+		} catch (e) {
+			return FileManager.local();
+		}
+	}
+
+	getCurrentDir() {
+		const fm = this.getFileManager();
+		const thisScriptPath = module.filename;
+		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	}
+
+}
+
+const jsonFileManager = new JSONFileManager();
+
 /*
  * Parameters
  *
@@ -33,7 +101,7 @@ const scriptParams = {
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
-const params = widgetParams || parameterStorage.loadStoredParameters(Script.name()) || scriptParams;
+const params = widgetParams || jsonFileManager.loadStoredParameters("storage/" + Script.name()) || scriptParams;
 const { apiKey } = params;
 
 /*******************************
@@ -101,73 +169,6 @@ const getLocationDescription = async(lat, long) => {
 const nextChar = (c) => {
 	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
-
-/**
- * Class that can load a JSON object from a file.
- * The log file is stored in ./storage/name.json
- *
- * Usage:
- *  * For input most of the time you want to use Script.name().
- *  * Use loadStoredParameters() to read the parameters in that file.
- */
-class ParameterStorage {
-
-	constructor(storageFileName) {
-		this.storageFileName = storageFileName;
-	}
-
-	/**
-	 * Attempts to load parameters stored in the file ./storage/name.json
-	 * Returns null if it cannot be loaded.
-	 */
-	loadStoredParameters() {
-		const fm = this.getFileManager();
-		const storageDir = this.getCurrentDir() + "storage";
-		const parameterPath = storageDir + "/" + this.storageFileName + ".json";
-
-		if (!fm.fileExists(storageDir)) {
-			logger.log("Storage folder does not exist!");
-			return null;
-		} else if (!fm.isDirectory(storageDir)) {
-			logger.log("Storage folder exists but is not a directory!");
-			return null;
-		} else if (!fm.fileExists(parameterPath)) {
-			logger.log("Parameter file does not exist!");
-			return null;
-		} else if (fm.isDirectory(parameterPath)) {
-			logger.log("Parameter file is a directory!");
-			return null;
-		}
-
-		// Doesn't fail with local filesystem
-		fm.downloadFileFromiCloud(parameterPath);
-
-		const parameterJSON = JSON.parse(fm.readString(parameterPath));
-		if (parameterJSON !== null) {
-			return parameterJSON;
-		} else {
-			logger.log("Could not load parameter file as JSON!");
-			return null;
-		}
-	}
-
-	getFileManager() {
-		try {
-			return FileManager.iCloud();
-		} catch (e) {
-			return FileManager.local();
-		}
-	}
-
-	getCurrentDir() {
-		const fm = this.getFileManager();
-		const thisScriptPath = module.filename;
-		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
-	}
-
-}
-
-const parameterStorage = new ParameterStorage(Script.name());
 
 /***************************
  **** LOGGING FUNCTIONS ****
