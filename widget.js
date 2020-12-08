@@ -13,7 +13,7 @@
  * Class that can read and write JSON objects using the file system.
  *
  * This is a minified version but it can be replaced with the full version by copy pasting this code!
- * https://github.com/stanleyrya/scriptable-playground/blob/main/json-file-manager.js
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/json-file-manager/json-file-manager.js
  *
  * Usage:
  *  * write(relativePath, jsonObject): Writes JSON object to a relative path.
@@ -26,7 +26,7 @@ const jsonFileManager = new JSONFileManager();
  * Class that can write logs to the file system.
  *
  * This is a minified version but it can be replaced with the full version by copy pasting this code!
- * https://github.com/stanleyrya/scriptable-playground/blob/main/file-logger.js
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/file-logger/file-logger.js
  *
  * Usage:
  *  * log(line): Adds the log line to the class' internal log object.
@@ -39,7 +39,7 @@ const logger = new FileLogger();
  * Class that can capture the time functions take in milliseconds then export them to a CSV.
  *
  * This is a minified version but it can be replaced with the full version by copy pasting this code!
- * https://github.com/stanleyrya/scriptable-playground/blob/main/append-to-performance-metrics.js
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/performance-debugger/performance-debugger.js
  *
  * Usage:
  *  * wrap(fn, args): Wrap the function calls you want to monitor with this wrapper.
