@@ -419,17 +419,17 @@ async function run() {
 	}
 
 	if (config.runsInWidget) {
-		const widget = await createWidget(currLocation);
+		const widget = await createWidget(location);
 		Script.setWidget(widget);
 		Script.complete();
 
 	} else if (params.forceWidgetView) {
 		// Useful for loading widget and seeing logger.logs manually
-		const widget = await createWidget(currLocation);
+		const widget = await createWidget(location);
 		await widget.presentMedium();
 
 	} else {
-		await clickWidget(currLocation);
+		await clickWidget(location);
 	}
 
 	if (params.logPerformanceMetrics) {
