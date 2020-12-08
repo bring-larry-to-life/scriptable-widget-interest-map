@@ -108,8 +108,8 @@ const getCurrentLocation = async() => {
  *
  * More information here: https://github.com/stanleyrya/scriptable-playground/blob/main/reverse-geocode-tests.js
  */
-const getLocationDescription = async(lat, long) => {
-	return Location.reverseGeocode(lat, long).then((res) => {
+const getLocationDescription = async(location) => {
+	return Location.reverseGeocode(location.latitude, location.longitude).then((res) => {
 		const response = res[0];
 
 		let areaOfInterest = "";
@@ -200,9 +200,9 @@ async function getMapsPicByCity(apiKey, city) {
 }
 
 // Returns object containing static Google Maps image response (by specific location & markers)
-async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers) {
+async function getMapsPicByCurrentLocations(apiKey, location, markers) {
 	try {
-		const uri = getMapUrlByCoordinates(apiKey, latitude, longitude, markers);
+		const uri = getMapUrlByCoordinates(apiKey, location.latitude, location.longitude, markers);
 		logger.log('Request URI');
 		logger.log(uri);
 		const mapPicRequest = new Request(encodeURI(uri));
@@ -250,9 +250,9 @@ const getWikiUrlByCoords = (lat, lng) => `https://en.wikipedia.org/w/api.php?act
  *   url: https://en.wikipedia.org/?38743
  * }]
  */
-async function getNearbyWikiArticles(lat, lng) {
+async function getNearbyWikiArticles(location) {
 	try {
-		const uri = getWikiUrlByCoords(lat, lng);
+		const uri = getWikiUrlByCoords(location.latitude, location.longitude);
 		logger.log('Request URI: ' + uri);
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
@@ -320,9 +320,9 @@ const createTable = (map, items) => {
 
 async function createWidget(location) {
 	let widget = new ListWidget();
-	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location.latitude, location.longitude]);
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location]);
 	// let image = await performanceDebugger.wrap(getMapsPicByCity, [apiKey, 'Boston, MA']);
-	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location.latitude, location.longitude, wikiArticles]);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location, wikiArticles]);
 	widget.backgroundImage = image;
 
 	let startColor = new Color("#1c1c1c00");
@@ -349,7 +349,7 @@ async function createWidget(location) {
 	additionalInfoStack.bottomAlignContent();
 	additionalInfoStack.addSpacer();
 
-	let currentLocationDescription = await getLocationDescription(location.latitude, location.longitude);
+	let currentLocationDescription = await getLocationDescription(location);
 	let primaryLocationDescription;
 	let secondaryLocationDescription;
 	if (currentLocationDescription.areaOfInterest) {
@@ -387,8 +387,8 @@ async function createWidget(location) {
 }
 
 async function clickWidget(location) {
-	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location.latitude, location.longitude]);
-	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location.latitude, location.longitude, wikiArticles]);
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location]);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location, wikiArticles]);
 	const table = createTable(image, wikiArticles);
 	await QuickLook.present(table);
 }
