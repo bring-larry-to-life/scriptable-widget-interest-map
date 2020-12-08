@@ -9,76 +9,31 @@
  * titles, and quick links to Wikipedia and Google Maps directions.
  */
 
-// Refresh interval in hours
-const refreshInterval = 6;
-
 /**
  * Class that can read and write JSON objects using the file system.
+ *
+ * This is a minified version but it can be replaced with the full version by copy pasting this code!
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/json-file-manager.js
+ *
+ * Usage:
+ *  * write(relativePath, jsonObject): Writes JSON object to a relative path.
+ *  * read(relativePath): Reads JSON object from a relative path.
  */
-class JSONFileManager {
-
-	/**
-	 * Attempts to write the jsonObject to the relative path.
-	 */
-	write(relativePath, jsonObject) {
-		const fm = this.getFileManager();
-		const jsonPath = this.getCurrentDir() + relativePath;
-
-		const splitRelativePath = relativePath.split("/");
-		if (splitRelativePath > 1) {
-			const fileName = splitRelativePath[splitRelativePath.length - 1];
-			const jsonDirectory = jsonPath.replace("/" + fileName, "");
-			fm.createDirectory(jsonDirectory, true);
-		}
-
-		if (fm.fileExists(jsonPath) && fm.isDirectory(jsonPath)) {
-			throw ("JSON file is a directory, please delete!");
-		}
-
-		fm.writeString(jsonPath, JSON.stringify(jsonObject));
-	}
-
-	/**
-	 * Attempts to load JSON stored at the relative path.
-	 */
-	read(relativePath) {
-		const fm = this.getFileManager();
-		const jsonPath = this.getCurrentDir() + relativePath;
-
-		if (!fm.fileExists(jsonPath)) {
-			throw ("JSON file does not exist! Could not load: " + jsonPath);
-		} else if (fm.isDirectory(jsonPath)) {
-			throw ("JSON file is a directory! Could not load: " + jsonPath);
-		}
-
-		// Doesn't fail with local filesystem
-		fm.downloadFileFromiCloud(jsonPath);
-
-		const loadedJSON = JSON.parse(fm.readString(jsonPath));
-		if (loadedJSON !== null) {
-			return loadedJSON;
-		} else {
-			throw ("Could not read file as JSON! Could not load: " + jsonPath);
-		}
-	}
-
-	getFileManager() {
-		try {
-			return FileManager.iCloud();
-		} catch (e) {
-			return FileManager.local();
-		}
-	}
-
-	getCurrentDir() {
-		const fm = this.getFileManager();
-		const thisScriptPath = module.filename;
-		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
-	}
-
-}
-
+class JSONFileManager{write(e,r){const t=this.getFileManager(),i=this.getCurrentDir()+e,l=e.split("/");if(l>1){const e=l[l.length-1],r=i.replace("/"+e,"");t.createDirectory(r,!0)}if(t.fileExists(i)&&t.isDirectory(i))throw"JSON file is a directory, please delete!";t.writeString(i,JSON.stringify(r))}read(e){const r=this.getFileManager(),t=this.getCurrentDir()+e;if(!r.fileExists(t))throw"JSON file does not exist! Could not load: "+t;if(r.isDirectory(t))throw"JSON file is a directory! Could not load: "+t;r.downloadFileFromiCloud(t);const i=JSON.parse(r.readString(t));if(null!==i)return i;throw"Could not read file as JSON! Could not load: "+t}getFileManager(){try{return FileManager.iCloud()}catch(e){return FileManager.local()}}getCurrentDir(){const e=this.getFileManager(),r=module.filename;return r.replace(e.fileName(r,!0),"")}}
 const jsonFileManager = new JSONFileManager();
+
+/**
+ * Class that can write logs to the file system.
+ *
+ * This is a minified version but it can be replaced with the full version by copy pasting this code!
+ * https://github.com/stanleyrya/scriptable-playground/blob/main/file-logger.js
+ *
+ * Usage:
+ *  * log(line): Adds the log line to the class' internal log object.
+ *  * writeLogs(relativeFilePath): Writes the stored logs to the relative file path.
+ */
+class FileLogger{constructor(){this.logs=""}log(e){e instanceof Error?console.error(e):console.log(e),this.logs+=new Date+" - "+e+"\n"}writeLogs(e){const r=this.getFileManager(),t=this.getCurrentDir()+e,i=e.split("/");if(i>1){const e=i[i.length-1],l=t.replace("/"+e,"");r.createDirectory(l,!0)}if(r.fileExists(t)&&r.isDirectory(t))throw"Log file is a directory, please delete!";r.writeString(t,this.logs)}getFileManager(){try{return FileManager.iCloud()}catch(e){return FileManager.local()}}getCurrentDir(){const e=this.getFileManager(),r=module.filename;return r.replace(e.fileName(r,!0),"")}}
+const logger = new FileLogger();
 
 /*
  * Parameters
@@ -103,6 +58,9 @@ const scriptParams = {
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
 const params = widgetParams || jsonFileManager.loadStoredParameters("storage/" + Script.name()) || scriptParams;
 const { apiKey } = params;
+
+// Refresh interval in hours
+const refreshInterval = 6;
 
 /*******************************
  ****** UTILITY FUNCTIONS ******
@@ -169,75 +127,6 @@ const getLocationDescription = async(lat, long) => {
 const nextChar = (c) => {
 	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
-
-/***************************
- **** LOGGING FUNCTIONS ****
- ***************************/
-
-/**
- * Class that can capture the time functions take in milliseconds then export them to a CSV.
- * The log file is stored in ./storage/name-logs.txt
- *
- * Usage:
- *  * For input most of the time you want to use Script.name().
- *  * Use log(line) instead of console.log().
- *  * Use writeLogs() at the end of your script to write the logs to the txt file.
- */
-class LoggingDebugger {
-
-	constructor(storageFileName) {
-		this.storageFileName = storageFileName;
-		this.logs = "";
-	}
-
-	log(line) {
-		if (line instanceof Error) {
-			console.error(line);
-		} else {
-			console.log(line);
-		}
-		this.logs += new Date() + " - " + line + "\n";
-	}
-
-	/**
-	 * Attempts to write logs to the file ./storage/name-logs.txt
-	 */
-	writeLogs() {
-		const fm = this.getFileManager();
-		const storageDir = this.getCurrentDir() + "storage";
-		const logPath = storageDir + "/" + this.storageFileName + "-logs.txt";
-
-		if (!fm.fileExists(storageDir)) {
-			log("Storage folder does not exist! Creating now.");
-			fm.createDirectory(storageDir);
-		} else if (!fm.isDirectory(storageDir)) {
-			throw ("Storage folder exists but is not a directory!");
-		}
-
-		if (fm.fileExists(logPath) && fm.isDirectory(logPath)) {
-			throw ("Log file is a directory, please delete!");
-		}
-
-		fm.writeString(logPath, this.logs);
-	}
-
-	getFileManager() {
-		try {
-			return FileManager.iCloud();
-		} catch (e) {
-			return FileManager.local();
-		}
-	}
-
-	getCurrentDir() {
-		const fm = this.getFileManager();
-		const thisScriptPath = module.filename;
-		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
-	}
-
-}
-
-const logger = new LoggingDebugger(Script.name());
 
 /*******************************
  **** PERFORMANCE FUNCTIONS ****
