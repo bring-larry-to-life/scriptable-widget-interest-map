@@ -432,7 +432,7 @@ try {
 } catch (err) {
 	logger.log(err);
 	if (params.writeLogsIfException) {
-		logger.writeLogs("storage/" + Script.name() + ".txt")
+		logger.writeLogs("storage/" + Script.name() + "-logs.txt")
 	}
 	throw err;
 }
