@@ -214,7 +214,7 @@ async function getMapsPicByCurrentLocations(apiKey, latitude, longitude, markers
 }
 
 // Returns Google Maps directions direct link from current location to point of interest
-const getDirectionsUrl = (currLocation, destination) => `https://www.google.com/maps/dir/${currLocation.latitude},${currLocation.longitude}/${destination.latitude},${destination.longitude}`;
+const getDirectionsUrl = (location, destination) => `https://www.google.com/maps/dir/${location.latitude},${location.longitude}/${destination.latitude},${destination.longitude}`;
 
 // Returns Google Maps direct link for point of interest
 const getCoordsUrl = (destination) => `https://www.google.com/maps/search/?api=1&query=${destination.latitude},${destination.longitude}`;
@@ -285,7 +285,7 @@ async function getNearbyWikiArticles(lat, lng) {
  ***** SCRIPTABLE & WIDGET FUNCTIONS *****
  *****************************************/
 
-const createTable = (currLocation, map, items) => {
+const createTable = (map, items) => {
 	const table = new UITable();
 	const mapRow = new UITableRow();
 	const mapCell = mapRow.addImage(map);
@@ -318,12 +318,11 @@ const createTable = (currLocation, map, items) => {
 	return table;
 }
 
-async function createWidget() {
+async function createWidget(location) {
 	let widget = new ListWidget();
-	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
-	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location.latitude, location.longitude]);
 	// let image = await performanceDebugger.wrap(getMapsPicByCity, [apiKey, 'Boston, MA']);
-	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location.latitude, location.longitude, wikiArticles]);
 	widget.backgroundImage = image;
 
 	let startColor = new Color("#1c1c1c00");
@@ -350,7 +349,7 @@ async function createWidget() {
 	additionalInfoStack.bottomAlignContent();
 	additionalInfoStack.addSpacer();
 
-	let currentLocationDescription = await getLocationDescription(currLocation.latitude, currLocation.longitude);
+	let currentLocationDescription = await getLocationDescription(location.latitude, location.longitude);
 	let primaryLocationDescription;
 	let secondaryLocationDescription;
 	if (currentLocationDescription.areaOfInterest) {
@@ -387,11 +386,10 @@ async function createWidget() {
 	return widget;
 }
 
-async function clickWidget() {
-	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
-	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [currLocation.latitude, currLocation.longitude]);
-	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, currLocation.latitude, currLocation.longitude, wikiArticles]);
-	const table = createTable(currLocation, image, wikiArticles);
+async function clickWidget(location) {
+	let wikiArticles = await performanceDebugger.wrap(getNearbyWikiArticles, [location.latitude, location.longitude]);
+	let image = await performanceDebugger.wrap(getMapsPicByCurrentLocations, [apiKey, location.latitude, location.longitude, wikiArticles]);
+	const table = createTable(image, wikiArticles);
 	await QuickLook.present(table);
 }
 
@@ -408,18 +406,20 @@ async function run() {
 		return;
 	}
 
+	let currLocation = await performanceDebugger.wrap(getCurrentLocation);
+
 	if (config.runsInWidget) {
-		const widget = await createWidget();
+		const widget = await createWidget(currLocation);
 		Script.setWidget(widget);
 		Script.complete();
 
 	} else if (params.forceWidgetView) {
 		// Useful for loading widget and seeing logger.logs manually
-		const widget = await createWidget();
+		const widget = await createWidget(currLocation);
 		await widget.presentMedium();
 
 	} else {
-		await clickWidget();
+		await clickWidget(currLocation);
 	}
 
 	if (params.logPerformanceMetrics) {
