@@ -56,7 +56,15 @@ const scriptParams = {
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
-const params = widgetParams || jsonFileManager.read("storage/" + Script.name() + ".json") || scriptParams;
+
+let storedParams;
+try {
+    storedParams = jsonFileManager.read("storage/" + Script.name() + ".json");
+} catch (err) {
+    logger.log(err);
+}
+
+const params = widgetParams || storedParams || scriptParams;
 const { apiKey } = params;
 
 // Refresh interval in hours
