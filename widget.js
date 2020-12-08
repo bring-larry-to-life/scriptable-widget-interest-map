@@ -33,7 +33,7 @@ const scriptParams = {
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
-const params = widgetParams || loadStoredParameters(Script.name()) || scriptParams;
+const params = widgetParams || parameterStorage.loadStoredParameters(Script.name()) || scriptParams;
 const { apiKey } = params;
 
 /*******************************
@@ -102,54 +102,72 @@ const nextChar = (c) => {
 	return String.fromCharCode(c.charCodeAt(0) + 1);
 }
 
-function getFileManager() {
-	try {
-		return FileManager.iCloud();
-	} catch (e) {
-		return FileManager.local();
-	}
-}
-
-function getCurrentDir() {
-	const fm = getFileManager();
-	const thisScriptPath = module.filename;
-	return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
-}
-
 /**
- * Attempts to load parameters stored in the file ./storage/name.json
- * Returns null if it cannot be loaded.
+ * Class that can load a JSON object from a file.
+ * The log file is stored in ./storage/name.json
+ *
+ * Usage:
+ *  * For input most of the time you want to use Script.name().
+ *  * Use loadStoredParameters() to read the parameters in that file.
  */
-function loadStoredParameters(name) {
-	const fm = getFileManager();
-	const storageDir = getCurrentDir() + "storage";
-	const parameterPath = storageDir + "/" + name + ".json";
+class ParameterStorage {
 
-	if (!fm.fileExists(storageDir)) {
-		logger.log("Storage folder does not exist!");
-		return null;
-	} else if (!fm.isDirectory(storageDir)) {
-		logger.log("Storage folder exists but is not a directory!");
-		return null;
-	} else if (!fm.fileExists(parameterPath)) {
-		logger.log("Parameter file does not exist!");
-		return null;
-	} else if (fm.isDirectory(parameterPath)) {
-		logger.log("Parameter file is a directory!");
-		return null;
+	constructor(storageFileName) {
+		this.storageFileName = storageFileName;
 	}
 
-	// Doesn't fail with local filesystem
-	fm.downloadFileFromiCloud(parameterPath);
+	/**
+	 * Attempts to load parameters stored in the file ./storage/name.json
+	 * Returns null if it cannot be loaded.
+	 */
+	loadStoredParameters() {
+		const fm = this.getFileManager();
+		const storageDir = this.getCurrentDir() + "storage";
+		const parameterPath = storageDir + "/" + this.storageFileName + ".json";
 
-	const parameterJSON = JSON.parse(fm.readString(parameterPath));
-	if (parameterJSON !== null) {
-		return parameterJSON;
-	} else {
-		logger.log("Could not load parameter file as JSON!");
-		return null;
+		if (!fm.fileExists(storageDir)) {
+			logger.log("Storage folder does not exist!");
+			return null;
+		} else if (!fm.isDirectory(storageDir)) {
+			logger.log("Storage folder exists but is not a directory!");
+			return null;
+		} else if (!fm.fileExists(parameterPath)) {
+			logger.log("Parameter file does not exist!");
+			return null;
+		} else if (fm.isDirectory(parameterPath)) {
+			logger.log("Parameter file is a directory!");
+			return null;
+		}
+
+		// Doesn't fail with local filesystem
+		fm.downloadFileFromiCloud(parameterPath);
+
+		const parameterJSON = JSON.parse(fm.readString(parameterPath));
+		if (parameterJSON !== null) {
+			return parameterJSON;
+		} else {
+			logger.log("Could not load parameter file as JSON!");
+			return null;
+		}
 	}
+
+	getFileManager() {
+		try {
+			return FileManager.iCloud();
+		} catch (e) {
+			return FileManager.local();
+		}
+	}
+
+	getCurrentDir() {
+		const fm = this.getFileManager();
+		const thisScriptPath = module.filename;
+		return thisScriptPath.replace(fm.fileName(thisScriptPath, true), '');
+	}
+
 }
+
+const parameterStorage = new ParameterStorage(Script.name());
 
 /***************************
  **** LOGGING FUNCTIONS ****
