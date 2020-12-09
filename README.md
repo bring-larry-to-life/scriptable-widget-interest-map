@@ -1,5 +1,7 @@
 # scriptable-widget-interest-map
 
+A widget built using the iOS app Scriptable. It displays nearby Wikipedia articles and allows you to either read them or get Google Maps directions to them.
+
 <p align="center">
 	<img src="media/D43ECEA3-0EF5-494B-A668-9954258A37D5.gif" width="333" height="720"/>
 </p>
