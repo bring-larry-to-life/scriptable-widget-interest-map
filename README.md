@@ -1,9 +1,8 @@
 # scriptable-widget-interest-map
 
-<img src="media/D43ECEA3-0EF5-494B-A668-9954258A37D5.gif" width="333" height="720"/>
-
-![A medium-sized widget view of Boston Common.](media/3DFC39F6-962E-4255-9337-DBAD908AAAC6.jpeg?raw=true)  |  ![A medium-sized widget view of Spot Pond.](media/C9BF6F28-93CC-4F8F-A848-58FD1CDB901B.png?raw=true)
-| --- | --- |
+<p align="center">
+	<img src="media/D43ECEA3-0EF5-494B-A668-9954258A37D5.gif" width="333" height="720"/>
+</p>
 
 ## Quickstart
 
@@ -56,8 +55,9 @@ CSV files could be read directly or visualized in Excel and Google Sheets. They 
 
 https://www.icloud.com/shortcuts/932366757e124075ae6f755da89563eb
 
-
-<img src="media/0F9651FC-E5F9-43FD-A1A5-5FA6B1FF395D.gif" width="333" height="720"/>
+<p align="center">
+	<img src="media/0F9651FC-E5F9-43FD-A1A5-5FA6B1FF395D.gif" width="333" height="720"/>
+</p>
 
 Here's an investigation where the performance logs were useful:
 
