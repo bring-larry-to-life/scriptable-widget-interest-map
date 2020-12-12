@@ -210,8 +210,8 @@ async function getMapsPicByCurrentLocations(apiKey, location, markers) {
 		const mapPicRequest = new Request(encodeURI(uri));
 		return await mapPicRequest.loadImage();
 	} catch (e) {
-		logger.log(e)
-		return null;
+        logger.log("Copy-paste the Google Maps URI into Safari if this doesn't work. There is probably something wrong with the API key.");
+        throw e;
 	}
 }
 
@@ -258,7 +258,6 @@ async function getNearbyWikiArticles(location) {
 		logger.log('Request URI: ' + uri);
 		const request = new Request(encodeURI(uri));
 		const wikiJSON = await request.loadJSON();
-		logger.log('Wiki JSON: ' + JSON.stringify(wikiJSON));
 
 		let articles;
 		if (wikiJSON && wikiJSON.query && wikiJSON.query.pages) {
@@ -274,8 +273,6 @@ async function getNearbyWikiArticles(location) {
 			"lat": article.coordinates[0].lat,
 			"thumbnail": article.thumbnail
 		}));
-
-		logger.log('Converted Wiki JSON: ' + JSON.stringify(response));
 		return response;
 	} catch (e) {
 		logger.log(e);
