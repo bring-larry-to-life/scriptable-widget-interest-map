@@ -9,10 +9,11 @@ A widget built using the iOS app Scriptable. It displays nearby Wikipedia articl
 ## Quickstart
 
 1. [Get an API key from Google.](https://developers.google.com/maps/documentation/javascript/get-api-key)
-2. Make sure to enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started
-3. [Download the Scriptable App for iOS.](https://scriptable.app/)
-4. [Copy and paste widget.js into a new script on the Scriptable app.](https://raw.githubusercontent.com/bring-larry-to-life/scriptable-widget-interest-map/main/widget.js)
-5. [Edit the script params section of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
+2. Make sure to [enable Billing](https://console.cloud.google.com/project/_/billing/enable) on the Google Cloud Project. [Learn more here](https://developers.google.com/maps/gmp-get-started).
+3. [Enable Google Maps Static API for your API key](https://console.developers.google.com/apis/library/static-maps-backend.googleapis.com)
+4. [Download the Scriptable App for iOS.](https://scriptable.app/)
+5. [Copy and paste widget.js into a new script on the Scriptable app.](https://raw.githubusercontent.com/bring-larry-to-life/scriptable-widget-interest-map/main/widget.js)
+6. [Edit the script params section of the script to use your API key:](https://github.com/bring-larry-to-life/scriptable-widget-interest-map/blob/c770af05d7299316b4dd38d7accdeb8d0f2aabf1/widget.js#L13-L16)
 ```
 const scriptParams = {
 	apiKey: 'XXX', <--- Put the API key here!
@@ -21,8 +22,8 @@ const scriptParams = {
 	logPerformanceMetrics: false
 }
 ```
-6. Create a new Scriptable widget on your home screen and edit it to use the script you downloaded.
-7. Enjoy!
+7. Create a new Scriptable widget on your home screen and edit it to use the script you downloaded.
+8. Enjoy!
 
 ## Other ways to load parameters
 
