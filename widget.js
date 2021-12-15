@@ -61,13 +61,25 @@ const performanceDebugger = new PerformanceDebugger();
  * 2. JSON file "./storage/scriptname.json"
  * 3. Hard-coded parameters right here:
  */
+
+ // Get user's current latitude and longitude
+ const getCurrentLocation = async() => {
+ 	await Location.setAccuracyToHundredMeters();
+ 	return Location.current().then((res) => {
+ 		return {
+ 			'latitude': res.latitude,
+ 			'longitude': res.longitude
+ 		};
+ 	}, err => log(err));
+ };
+
 const scriptParams = {
 	apiKey: 'XXX',
 	forceWidgetView: false,
 	writeLogsIfException: false,
 	logPerformanceMetrics: false,
-	overrideLatitude: 42.3549970,
-	overrideLongitude: -71.0644556
+	overrideLatitude: getCurrentLocation.latitude,
+	overrideLongitude: getCurrentLocation.longitude
 }
 
 const widgetParams = args.widgetParameter ? JSON.parse(args.widgetParameter) : undefined;
@@ -89,16 +101,7 @@ const refreshInterval = 6;
  ****** UTILITY FUNCTIONS ******
  *******************************/
 
-// Get user's current latitude and longitude
-const getCurrentLocation = async() => {
-	await Location.setAccuracyToHundredMeters();
-	return Location.current().then((res) => {
-		return {
-			'latitude': res.latitude,
-			'longitude': res.longitude
-		};
-	}, err => log(err));
-};
+
 
 /*
  * Given coordinates, return a description of the current location in words (town name, etc.).
