@@ -317,6 +317,25 @@ const createTable = (map, items) => {
 		table.addRow(row);
 		label = nextChar(label);
 	});
+  //adding one more item for Nearby
+  logger.log('ITEM');
+	const row = new UITableRow();
+	const markerUrl = `http://google.com`;
+	const imageUrl = 'https://cdn-icons-png.flaticon.com/512/48/48927.png';
+	const title = 'See more nearby';
+	const markerCell = row.addButton(label);
+	const imageCell = row.addImageAtURL(imageUrl);
+	const titleCell = row.addText(title);
+	markerCell.onTap = () => Safari.open(getCoordsUrl({ latitude: item.lat, longitude: item.lng }));
+	markerCell.widthWeight = 10;
+	imageCell.widthWeight = 20;
+	titleCell.widthWeight = 50;
+	row.height = 60;
+	row.cellSpacing = 10;
+	row.onSelect = () => Safari.open('https://en.wikipedia.org/wiki/Special:Nearby#/coord/'+getCurrentLocation.latitude+','+getCurrentLocation.longitude);
+	row.dismissOnSelect = false;
+	table.addRow(row);
+	label = nextChar(label);
 	return table;
 }
 
